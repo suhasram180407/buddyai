@@ -164,13 +164,4 @@ Buddy AI includes comprehensive unit and integration test coverage across all su
 **Test Status:** 236 passed, 0 failed, 100% success rate.
 
 ---
-
-## Provenance and Open Source Attribution
-
-Buddy AI is developed from the open-source [Jarvis](https://github.com/judejulius/jarvis) project created by Mohammad Joud Julius, licensed under the MIT License.
-
-* **Upstream Repository:** `https://github.com/judejulius/jarvis.git`
-* **Original Copyright:** Copyright (c) 2026 Mohammad Joud Julius
-* **Modifications & Enhancements:** Copyright (c) 2026 Suhas Ram. Customized for the Buddy AI project, introducing the "Hey Buddy" wake-word pipeline, streamlined English-only architecture, live dynamic model discovery, device geographic location resolution, and enhanced multi-step phone agent workflows.
-
 Licensed under the [MIT License](LICENSE).
