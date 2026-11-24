@@ -10,8 +10,8 @@ object Lexicon {
     private const val DEVANAGARI_DIGITS = "०१२३४५६७८९"
     private val AM_PM = Regex("""\b([ap])\.\s?m\b\.?""")
     private val PUNCTUATION = Regex("""[^\p{L}\p{M}\p{N}:+\s]""")
-    private val LEADING_PHRASES = listOf("can you", "could you", "would you", "will you", "can u")
-    private val LEADING = setOf("hey", "hi", "ok", "okay", "jarvis", "please", "plz", "pls", "kindly", "zara", "jara", "mujhe")
+    private val LEADING_PHRASES = listOf("can you", "could you", "would you", "will you", "can u", "hey buddy", "ok buddy", "okay buddy", "hi buddy")
+    private val LEADING = setOf("hey", "hi", "ok", "okay", "buddy", "jarvis", "please", "plz", "pls", "kindly", "zara", "jara", "mujhe")
     private val TRAILING = setOf("please", "plz", "pls", "na", "yaar", "jaldi", "now", "abhi")
 
     /** Devanagari spellings are matched without nukta, so keys and input go through [devKey]. */

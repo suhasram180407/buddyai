@@ -205,4 +205,23 @@ class FastCommandRouterTest {
         assertNull(FastCommandRouter.earlyAcceptDelayMs("set an alarm for 7"))
         assertNull(FastCommandRouter.earlyAcceptDelayMs("open"))
     }
+
+    @Test fun volumeQueriesAndContextualFollowUps() {
+        assertEquals(FastCommand.Ask(QueryKind.VOLUME), p("what is the volume"))
+        assertEquals(FastCommand.Ask(QueryKind.VOLUME), p("how loud is it"))
+        assertEquals(FastCommand.Flashlight(false), FastCommandRouter.parse("turn it off", FastCommand.Flashlight(true)))
+        assertEquals(FastCommand.Flashlight(true), FastCommandRouter.parse("turn it on", FastCommand.Flashlight(false)))
+        assertEquals(FastCommand.Media(MediaAction.PAUSE), FastCommandRouter.parse("turn it off", FastCommand.Media(MediaAction.PLAY)))
+        assertEquals(FastCommand.Volume(VolumeChange.UP), FastCommandRouter.parse("louder", FastCommand.Volume(VolumeChange.SET, 50)))
+        assertEquals(FastCommand.Volume(VolumeChange.DOWN), FastCommandRouter.parse("quieter", FastCommand.Volume(VolumeChange.SET, 50)))
+    }
+
+    @Test fun mediaCountAndFileOps() {
+        assertEquals(FastCommand.CountMedia("videos"), p("count videos"))
+        assertEquals(FastCommand.CountMedia("photos"), p("how many photos do i have"))
+        assertEquals(FastCommand.FileOp("list"), p("list files"))
+        assertEquals(FastCommand.FileOp("find", filename = "notes txt"), p("find file notes.txt"))
+        assertEquals(FastCommand.FileOp("read", filename = "notes txt"), p("read file notes.txt"))
+        assertEquals(FastCommand.FileOp("create", filename = "notes txt", content = "hello world"), p("create file notes.txt with hello world"))
+    }
 }

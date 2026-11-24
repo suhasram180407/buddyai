@@ -17,17 +17,16 @@ data class ProviderPreset(
     val defaultBaseUrl: String,
     val defaultModel: String,
     val needsKey: Boolean,
+    val apiKeyUrl: String = "",
 )
 
 val PROVIDERS = listOf(
-    ProviderPreset("anthropic", "Claude (Anthropic)", ApiKind.ANTHROPIC, "https://api.anthropic.com", "claude-opus-5-5", true),
-    ProviderPreset("openai", "OpenAI", ApiKind.OPENAI_COMPATIBLE, "https://api.openai.com/v1", "gpt-5", true),
-    ProviderPreset("lmstudio", "LM Studio (local)", ApiKind.OPENAI_COMPATIBLE, "http://192.168.1.100:1234/v1", "local-model", false),
-    ProviderPreset("ollama", "Ollama (local)", ApiKind.OPENAI_COMPATIBLE, "http://192.168.1.100:11434/v1", "qwen2.5:14b", false),
-    ProviderPreset("openrouter", "OpenRouter", ApiKind.OPENAI_COMPATIBLE, "https://openrouter.ai/api/v1", "anthropic/claude-opus-5-5", true),
-    ProviderPreset("gemini", "Google Gemini", ApiKind.OPENAI_COMPATIBLE, "https://generativelanguage.googleapis.com/v1beta/openai", "gemini-2.5-flash", true),
-    ProviderPreset("groq", "Groq", ApiKind.OPENAI_COMPATIBLE, "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile", true),
-    ProviderPreset("custom", "Custom (OpenAI-compatible)", ApiKind.OPENAI_COMPATIBLE, "http://localhost:8080/v1", "", false),
+    ProviderPreset("groq", "Groq (Free)", ApiKind.OPENAI_COMPATIBLE, "https://api.groq.com/openai/v1", "qwen/qwen3.8-27b", true, "https://console.groq.com/keys"),
+    ProviderPreset("gemini", "Google Gemini (Free)", ApiKind.OPENAI_COMPATIBLE, "https://generativelanguage.googleapis.com/v1beta/openai", "gemini-2.0-flash", true, "https://aistudio.google.com/app/apikey"),
+    ProviderPreset("openrouter", "OpenRouter", ApiKind.OPENAI_COMPATIBLE, "https://openrouter.ai/api/v1", "meta-llama/llama-3.3-70b-instruct:free", true, "https://openrouter.ai/keys"),
+    ProviderPreset("lmstudio", "LM Studio (local)", ApiKind.OPENAI_COMPATIBLE, "http://192.168.1.100:1234/v1", "local-model", false, "https://lmstudio.ai/"),
+    ProviderPreset("ollama", "Ollama (local)", ApiKind.OPENAI_COMPATIBLE, "http://192.168.1.100:11434/v1", "qwen2.5:14b", false, "https://ollama.com/"),
+    ProviderPreset("custom", "Custom (OpenAI-compatible)", ApiKind.OPENAI_COMPATIBLE, "http://localhost:8080/v1", "", false, ""),
 )
 
 /** A model the user has saved. Several can exist; one is primary, the rest are fallbacks in order. */
@@ -240,10 +239,10 @@ class Settings(context: Context) {
         get() = AiMode.parse(prefs.getString("ai_mode", null))
         set(v) = prefs.edit().putString("ai_mode", v.name).apply()
 
-    /** "en" = offline English recognizer; "hi" = Google recognizer in Hindi (also understands Hinglish). */
+    /** English only. */
     var speechLanguage: String
-        get() = prefs.getString("speech_lang", "en") ?: "en"
-        set(v) = prefs.edit().putString("speech_lang", if (v == "hi") "hi" else "en").apply()
+        get() = "en"
+        set(_) = prefs.edit().putString("speech_lang", "en").apply()
 
     /** Ask before placing calls or sending messages. */
     var confirmSensitive: Boolean
@@ -358,11 +357,11 @@ val KOKORO_VOICES = listOf(
     KokoroVoice(10, "Lewis", "British male"),
     KokoroVoice(7, "Emma", "British female"),
     KokoroVoice(8, "Isabella", "British female"),
-    KokoroVoice(5, "Adam", "American male"),
-    KokoroVoice(6, "Michael", "American male"),
+    KokoroVoice(0, "Heart", "American female"),
     KokoroVoice(1, "Bella", "American female"),
     KokoroVoice(2, "Nicole", "American female"),
     KokoroVoice(3, "Sarah", "American female"),
     KokoroVoice(4, "Sky", "American female"),
-    KokoroVoice(0, "Default", "American female"),
+    KokoroVoice(5, "Adam", "American male"),
+    KokoroVoice(6, "Michael", "American male"),
 )

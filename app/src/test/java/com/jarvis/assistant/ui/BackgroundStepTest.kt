@@ -65,7 +65,7 @@ class BackgroundStepTest {
                 val primary = a.findViewById<TextView>(R.id.primaryButton)
                 assertEquals("Continue anyway", primary.text.toString())
                 primary.performClick()
-                assertEquals("Ears and a voice", a.findViewById<TextView>(R.id.stepTitle).text)
+                assertEquals(a.getString(R.string.ob_dl_title), a.findViewById<TextView>(R.id.stepTitle).text)
             }
         }
     }

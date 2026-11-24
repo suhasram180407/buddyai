@@ -132,6 +132,7 @@ class JarvisService : Service() {
 
     /** An app name that could not be opened, and when. If the user repeats the command with the right name soon after, the old phrase is learned. */
     @Volatile private var failedApp: Pair<String, Long>? = null
+    @Volatile private var lastFastCommand: FastCommand? = null
     @Volatile private var state = State.IDLE
     @Volatile private var cancelled = false
     private var startFailed = false
@@ -232,7 +233,7 @@ class JarvisService : Service() {
         if (destroyed || state != State.IDLE) return
         when (problem) {
             "ok" -> update("Say \"${settings.wakePromptPhrase}\"")
-            "blocked" -> update("Android is blocking the microphone. Open Jarvis once, then try again.")
+            "blocked" -> update("Android is blocking the microphone. Open Buddy AI once, then try again.")
             else -> update("Microphone busy. Reconnecting…")
         }
     }
@@ -391,10 +392,10 @@ class JarvisService : Service() {
     /** What Jarvis says when woken and the user has not started speaking: the day's first greeting, otherwise "Yes?". */
     private fun wakePrompt(): String = greeting.takeGreeting() ?: "Yes?"
 
-    /** Offline English recognition, unless the user chose Hindi/Hinglish (then Google's recognizer is used). */
-    private val useOfflineAsr get() = voice.canTranscribe && settings.speechLanguage == "en"
+    /** Offline English recognition. */
+    private val useOfflineAsr get() = voice.canTranscribe
 
-    private fun googleLanguage(): String? = if (settings.speechLanguage == "hi") "hi-IN" else null
+    private fun googleLanguage(): String? = null
 
     private fun onHeard(text: String?, followUp: Boolean = false, interrupted: Boolean = false) {
         if (state != State.LISTENING_COMMAND) return
@@ -434,8 +435,7 @@ class JarvisService : Service() {
     private fun isPhoneAction(task: String): Boolean {
         val t = task.lowercase()
         val patterns = listOf(
-            Regex("""\b(open|launch|close|exit|switch to|go to|tap|click|press|scroll|swipe|type|enter|send|text|call|dial|hang up|answer|reject|play|pause|skip|next|previous|turn on|turn off|enable|disable|increase|decrease|raise|lower|volume|brightness|screenshot|lock|unlock|navigate|share|copy|paste|set alarm|set a reminder|set reminder|set timer|change wallpaper)\b"""),
-            Regex("""(kholo|khol do|band karo|bhejo|bhej do|call karo|phone karo|lagao|laga do|bajao|chalao|chala do|on karo|off karo|badha do|kam karo|ghata do|screenshot lo|photo lo|record karo|mute karo|unmute karo|silent kar do|alarm laga|reminder laga)""")
+            Regex("""\b(open|launch|close|exit|switch to|go to|tap|click|press|scroll|swipe|type|enter|send|text|message|call|dial|hang up|answer|reject|play|pause|skip|next|previous|turn on|turn off|enable|disable|increase|decrease|raise|lower|volume|brightness|screenshot|lock|unlock|navigate|share|copy|paste|set alarm|set a reminder|set reminder|set timer|change wallpaper|search|find|lookup|look up|locate|where|file|folder|create|save|make|write|read|delete|hotel|restaurant|address|maps|location|gps)\b""")
         )
         return patterns.any { it.containsMatchIn(t) }
     }
@@ -451,7 +451,7 @@ class JarvisService : Service() {
         if (models.isEmpty()) {
             return AgentResult(
                 false,
-                if (settings.modelsInOrder().isEmpty()) "No AI model is set up yet."
+                if (settings.modelsInOrder().isEmpty()) "I'm in local offline mode. I can adjust volume, flashlight, launch apps, manage files, and control device settings. For general conversation, please add an AI model in Models."
                 else "None of your models can be used in ${settings.aiMode.name.lowercase()} mode.",
             )
         }
@@ -591,6 +591,7 @@ class JarvisService : Service() {
         is FastCommand.Volume, is FastCommand.Flashlight, is FastCommand.Media, is FastCommand.Ask,
         is FastCommand.SetMode, is FastCommand.SetLanguage, is FastCommand.SetAlarm, is FastCommand.SetTimer,
         FastCommand.Screenshot, FastCommand.LockScreen, is FastCommand.RuntimeControl,
+        is FastCommand.CountMedia, is FastCommand.FileOp,
         -> TaskType.INSTANT
         else -> TaskType.PHONE
     }
@@ -704,7 +705,7 @@ class JarvisService : Service() {
 
         trace.mark("heard")
         val memoryIntent = MemoryIntentParser.parse(task)
-        val fast = if (memoryIntent == null) FastCommandRouter.parse(task) else null
+        val fast = if (memoryIntent == null) FastCommandRouter.parse(task, lastFastCommand) else null
         val type = when {
             memoryIntent != null -> TaskType.INSTANT
             fast != null -> typeOf(fast)
@@ -772,6 +773,7 @@ class JarvisService : Service() {
                     return@execute
                 }
                 history.step(id, outcome.message)
+                if (outcome.success && fast != null) lastFastCommand = fast
                 val message = learnFromRetry(outcome)
                 main.post { deliver(task, id, AgentResult(outcome.success, message), keepInHistory = keep, via = "instant") }
             }
@@ -783,7 +785,7 @@ class JarvisService : Service() {
     private fun needsUnlock(c: FastCommand) = when (c) {
         is FastCommand.Volume, is FastCommand.Flashlight, is FastCommand.Media, is FastCommand.Ask,
         is FastCommand.SetMode, is FastCommand.SetLanguage, is FastCommand.SetAlarm, is FastCommand.SetTimer,
-        FastCommand.Screenshot, FastCommand.LockScreen,
+        FastCommand.Screenshot, FastCommand.LockScreen, is FastCommand.CountMedia, is FastCommand.FileOp,
         -> false
         else -> true
     }
@@ -1036,8 +1038,10 @@ class JarvisService : Service() {
     }
 
     private fun createChannel() {
-        val channel = NotificationChannel(CHANNEL, "Jarvis", NotificationManager.IMPORTANCE_LOW)
-        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+        val nm = getSystemService(NotificationManager::class.java)
+        runCatching { nm.deleteNotificationChannel("jarvis") }
+        val channel = NotificationChannel(CHANNEL, getString(R.string.app_name), NotificationManager.IMPORTANCE_LOW)
+        nm.createNotificationChannel(channel)
     }
 
     private fun notification(text: String): Notification {
@@ -1045,8 +1049,8 @@ class JarvisService : Service() {
         fun action(action: String, code: Int) =
             PendingIntent.getService(this, code, Intent(this, JarvisService::class.java).setAction(action), PendingIntent.FLAG_IMMUTABLE)
         return NotificationCompat.Builder(this, CHANNEL)
-            .setSmallIcon(R.drawable.ic_stat_jarvis)
-            .setContentTitle("Jarvis")
+            .setSmallIcon(R.drawable.ic_stat_buddy)
+            .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setOngoing(true)
@@ -1060,7 +1064,7 @@ class JarvisService : Service() {
 
     companion object {
         private const val TAG = "JarvisService"
-        private const val CHANNEL = "jarvis"
+        private const val CHANNEL = "buddy_ai_service"
         private const val NOTIFICATION_ID = 1
         const val ACTION_RUN = "com.jarvis.assistant.RUN"
         const val ACTION_WAKE_SETTINGS = "com.jarvis.assistant.WAKE_SETTINGS"
@@ -1080,8 +1084,8 @@ class JarvisService : Service() {
         private const val RETRY_LEARN_MS = 20_000L
         private const val TRIM_RUNNING_CRITICAL = 15 // ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL
 
-        private const val CHAT_PROMPT = "You are Jarvis, a helpful Android phone assistant. " +
-            "Reply naturally and concisely in the user's language, including Hindi or Hinglish. " +
+        private const val CHAT_PROMPT = "You are Buddy AI, a helpful, friendly, natural on-phone AI assistant. " +
+            "Reply concisely and directly in English. " +
             "You are in conversation mode and cannot operate the phone in this mode. " +
             "Never claim you performed a phone action."
 

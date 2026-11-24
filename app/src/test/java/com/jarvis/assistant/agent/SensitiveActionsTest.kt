@@ -18,7 +18,7 @@ class SensitiveActionsTest {
     }
 
     @Test fun onlyAClearYesConfirms() {
-        for (a in listOf("yes", "Yeah go ahead", "ok send it", "haan", "theek hai", "हाँ", "हां कर दो")) assertTrue(a, SensitiveActions.isYes(a))
-        for (a in listOf(null, "", "no", "no don't send it", "yes no wait", "maybe", "nahi", "नहीं", "hmm let me think")) assertFalse(a.toString(), SensitiveActions.isYes(a))
+        for (a in listOf("yes", "Yeah go ahead", "ok send it", "yep", "sure", "confirmed", "do it")) assertTrue(a, SensitiveActions.isYes(a))
+        for (a in listOf(null, "", "no", "no don't send it", "yes no wait", "maybe", "cancel", "stop", "wait", "hmm let me think")) assertFalse(a.toString(), SensitiveActions.isYes(a))
     }
 }

@@ -55,7 +55,7 @@ object CrashReporter {
 
     private fun header(context: Context): String {
         val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull()
-        return "Jarvis $version crash report\nPhone: ${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n" +
+        return "Buddy AI $version crash report\nPhone: ${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n" +
             "Time: ${fmt(System.currentTimeMillis())}\n"
     }
 

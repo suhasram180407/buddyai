@@ -62,22 +62,10 @@ class SettingsFragment : Fragment() {
         ui.previewButton.setOnClickListener { previewVoice() }
         showVoiceSection()
 
-        // Wake word
-        refreshers += Setup.bindRows(activity, ui.wakeRow, listOf(Setup.Item.WAKE_WORD, Setup.Item.SPEECH))
-        ui.customWake.text = getString(R.string.wake_phrase_value, settings.wakePromptPhrase)
-        ui.customWake.setOnClickListener { editWakePhrase() }
-        ui.wakeSwitch.isChecked = settings.wakeWordEnabled
-        ui.bootSwitch.isChecked = settings.startOnBoot
-        ui.wakeSwitch.setOnCheckedChangeListener { _, v -> settings.wakeWordEnabled = v }
-        ui.bootSwitch.setOnCheckedChangeListener { _, v -> settings.startOnBoot = v }
-        ui.bargeSwitch.isChecked = settings.interruptByTalking
-        ui.bargeSwitch.setOnCheckedChangeListener { _, v -> settings.interruptByTalking = v }
-        ui.followUpSwitch.isChecked = settings.followUp
-        ui.followUpSwitch.setOnCheckedChangeListener { _, v -> settings.followUp = v }
-
-
         // Permissions
-        refreshers += Setup.bindRows(activity, ui.permissionRows, listOf(Setup.Item.MICROPHONE, Setup.Item.PHONE_CONTROL, Setup.Item.BACKGROUND))
+        ui.openPermissions.setOnClickListener {
+            startActivity(Intent(requireContext(), PermissionsActivity::class.java))
+        }
 
         // About you
         ui.notes.setText(settings.personalNotes)
@@ -96,31 +84,6 @@ class SettingsFragment : Fragment() {
             refreshers += AssistantSection.attach(requireContext(), settings, ui.scroll.getChildAt(0) as ViewGroup)
         }.onFailure { android.util.Log.e("Settings", "could not add the Assistant section", it) }
         return ui.root
-    }
-
-    private fun editWakePhrase() {
-        val field = EditText(requireContext()).apply {
-            setSingleLine()
-            hint = "Hey Computer"
-            setText(settings.customWakePhrase)
-        }
-        val dialog = AlertDialog.Builder(requireContext())
-            .setTitle(R.string.custom_wake_title)
-            .setMessage(R.string.custom_wake_message)
-            .setView(field).setPositiveButton(R.string.save, null).setNegativeButton(R.string.cancel, null).show()
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
-            val phrase = WakePhrase.normalize(field.text.toString())
-            if (phrase.isNotEmpty() && !WakePhrase.isValid(phrase)) {
-                field.error = getString(R.string.wake_phrase_invalid)
-                return@setOnClickListener
-            }
-            settings.customWakePhrase = phrase.takeUnless { it.equals(WakePhrase.DEFAULT, true) || it.equals("Jarvis", true) }.orEmpty()
-            ui.customWake.text = getString(R.string.wake_phrase_value, settings.wakePromptPhrase)
-            if (JarvisService.running) {
-                requireContext().startService(Intent(requireContext(), JarvisService::class.java).setAction(JarvisService.ACTION_WAKE_SETTINGS))
-            }
-            dialog.dismiss()
-        }
     }
 
     override fun onResume() {

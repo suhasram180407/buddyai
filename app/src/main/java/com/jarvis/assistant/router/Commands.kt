@@ -4,10 +4,10 @@ import com.jarvis.assistant.ai.AiMode
 
 enum class VolumeChange { UP, DOWN, MUTE, UNMUTE, SET }
 enum class MediaAction { PLAY, PAUSE, NEXT, PREVIOUS }
-enum class QueryKind { TIME, DATE, BATTERY }
+enum class QueryKind { TIME, DATE, BATTERY, VOLUME }
 enum class RuntimeAction { DOWNLOAD, STATUS }
 
-/** Things Jarvis can do straight away, without asking a language model. */
+/** Things Buddy AI can do straight away, without asking a language model. */
 sealed interface FastCommand {
     data class OpenApp(val query: String) : FastCommand
 
@@ -43,6 +43,12 @@ sealed interface FastCommand {
 
     /** "download the offline model" / "is the local model running". */
     data class RuntimeControl(val action: RuntimeAction) : FastCommand
+
+    /** Native local file operations: list, find, read, create, append. */
+    data class FileOp(val action: String, val filename: String = "", val content: String = "") : FastCommand
+
+    /** Query media storage: count videos or photos. */
+    data class CountMedia(val type: String) : FastCommand
 }
 
 /** Commands about Jarvis's own memory. Only ever created from what the user said, never from model or screen text. */

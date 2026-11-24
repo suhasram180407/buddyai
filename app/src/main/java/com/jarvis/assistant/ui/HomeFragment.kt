@@ -43,7 +43,7 @@ class HomeFragment : Fragment() {
             val report = CrashReporter.pending(requireContext()) ?: return@setOnClickListener
             startActivity(android.content.Intent.createChooser(
                 android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
-                    .putExtra(android.content.Intent.EXTRA_SUBJECT, "Jarvis crash report")
+                    .putExtra(android.content.Intent.EXTRA_SUBJECT, "Buddy AI crash report")
                     .putExtra(android.content.Intent.EXTRA_TEXT, report),
                 getString(R.string.crash_share_title),
             ))

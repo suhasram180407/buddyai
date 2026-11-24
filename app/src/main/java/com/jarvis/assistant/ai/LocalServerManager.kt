@@ -85,7 +85,7 @@ class LocalServerManager(context: Context, private val settings: Settings) {
     /** One sentence for the user about why the local model is not available. */
     fun explainFailure(): String = when (lastStart) {
         StartResult.NO_TERMUX -> "Termux isn't installed, so I can't start the local model."
-        StartResult.NO_PERMISSION -> "Jarvis needs the Termux 'run commands' permission to start the local model."
+        StartResult.NO_PERMISSION -> "Buddy AI needs the Termux 'run commands' permission to start the local model."
         StartResult.DISABLED -> "The local model isn't running and auto-start is off."
         StartResult.FAILED, StartResult.SENT, StartResult.THROTTLED ->
             "The local model didn't start. Run the Termux setup once, as described in the install notes."

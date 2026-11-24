@@ -49,13 +49,12 @@ class ModelsFragment : Fragment() {
             row.badge.text = profile.name.firstOrNull()?.uppercase() ?: "?"
             row.detail.text = "${profile.preset.label} · ${profile.model}"
             row.primaryTag.visibility = if (isPrimary) View.VISIBLE else View.GONE
-            row.star.setIconResource(if (isPrimary) R.drawable.ic_star else R.drawable.ic_star_outline)
-            row.star.contentDescription = getString(if (isPrimary) R.string.primary_model else R.string.make_primary)
-            row.card.strokeColor = ctx.color(if (isPrimary) R.color.accent else R.color.stroke)
-            row.star.setOnClickListener {
+            row.selectRadio.isChecked = isPrimary
+            row.selectRadio.setOnClickListener {
                 settings.primaryId = profile.id
                 render()
             }
+            row.card.strokeColor = ctx.color(if (isPrimary) R.color.accent else R.color.stroke)
             row.card.setOnClickListener {
                 startActivity(Intent(ctx, ModelEditActivity::class.java).putExtra(ModelEditActivity.EXTRA_ID, profile.id))
             }

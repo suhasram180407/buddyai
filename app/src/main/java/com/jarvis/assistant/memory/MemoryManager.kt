@@ -266,5 +266,10 @@ class MemoryManager(context: Context) {
             instance ?: synchronized(this) {
                 instance ?: MemoryManager(context.applicationContext).also { instance = it }
             }
+
+        fun resetForTesting() {
+            instance?.helper?.close()
+            instance = null
+        }
     }
 }

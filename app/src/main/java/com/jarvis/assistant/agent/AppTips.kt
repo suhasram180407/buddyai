@@ -46,7 +46,7 @@ class AppTips(userText: String, private val labelOf: (String) -> String?) {
 
         private val WHATSAPP = listOf(
             "To find a chat, tap the search icon or search bar at the top of the Chats tab and type the name.",
-            "The message box is usually labelled \"Message\". The Send button only appears after typing; when the box is empty that spot is the voice note button, so don't hold it.",
+            "The message box is labelled \"Message\". Type the message text, then tap the Send button (labelled \"Send\") to deliver the message.",
         )
         private val SETTINGS = listOf(
             "Use the search field at the top (\"Search settings\") instead of scrolling through menus.",

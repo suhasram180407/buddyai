@@ -5,7 +5,7 @@ import java.util.Locale
 
 /** English unigram pieces and scores extracted from the pinned GigaSpeech keyword model's bpe.model. */
 object WakePhrase {
-    const val DEFAULT = "Hey Jarvis"
+    const val DEFAULT = "Hey Buddy"
     private val valid = Regex("[A-Za-z]+(?: [A-Za-z]+)*")
 
     fun normalize(text: String) = text.trim().replace(Regex("\\s+"), " ")

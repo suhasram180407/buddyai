@@ -109,7 +109,7 @@
             android:maxLines="2"
             android:textColor="#FFFFFF"
             android:textSize="17sp"
-            tools:text="Send my wife a message on WhatsApp and tell her I love her" />
+            tools:text="Send Amma a message on WhatsApp saying hi" />
 
         <TextView
             android:id="@+id/expStatus"

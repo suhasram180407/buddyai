@@ -37,11 +37,10 @@ class RoutePolicyTest {
         assertEquals("qwen", ids(RoutePolicy.order(all, AiMode.AUTO, true, TaskKind.CHAT, "what is two plus two"))[0])
     }
 
-    @Test fun autoSendsHardCurrentOrHindiChatToCloud() {
+    @Test fun autoSendsHardCurrentOrComplexChatToCloud() {
         assertFalse(RoutePolicy.preferLocalForChat("explain how photosynthesis works"))
         assertFalse(RoutePolicy.preferLocalForChat("what is the weather today"))
-        assertFalse(RoutePolicy.preferLocalForChat("मुझे एक कहानी सुनाओ"))
-        assertFalse(RoutePolicy.preferLocalForChat("mujhe batao ye kya hai"))
+        assertFalse(RoutePolicy.preferLocalForChat("what are current stock prices"))
         assertFalse(RoutePolicy.preferLocalForChat("one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen"))
         assertTrue(RoutePolicy.preferLocalForChat("how are you"))
         assertEquals("groq", ids(RoutePolicy.order(all, AiMode.AUTO, true, TaskKind.CHAT, "explain gravity"))[0])

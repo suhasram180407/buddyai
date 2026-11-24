@@ -59,30 +59,24 @@ class StartThrottle(
 object RoutePolicy {
     private val CURRENT_INFO = Regex(
         """\b(news|weather|score|scores|price|prices|stock|stocks|today|tonight|tomorrow|yesterday|latest|current|currently|""" +
-            """right now|trending|result|results|aaj|kal|abhi|mausam|khabar|samachar|rate)\b""",
+            """right now|trending|result|results|rate)\b""",
     )
     private val COMPLEX = Regex(
         """\b(explain|why|how does|how do|write|code|translate|summari[sz]e|compare|essay|story|poem|""" +
-            """difference between|step by step|analy[sz]e|plan|recommend|samjhao|likho)\b""",
-    )
-    private val HINGLISH = setOf(
-        "hai", "hain", "kya", "kaise", "kaisa", "kyun", "kyu", "kaun", "kab", "kahan", "mujhe", "mera", "meri", "mere",
-        "batao", "bata", "aap", "tum", "tumhe", "hoon", "nahi", "nahin", "aur", "mein", "karo", "kitna", "kitne", "kuch",
-        "hota", "hoti", "sakte", "sakta", "chahiye",
+            """difference between|step by step|analy[sz]e|plan|recommend)\b""",
     )
 
     /**
-     * Short, simple English chat can be answered by the small local model. Anything that needs current facts, real
-     * reasoning, or Hindi/Hinglish goes to a stronger cloud model when the internet is available.
+     * Short, simple English chat can be answered by the small local model. Anything that needs current facts
+     * or deeper reasoning goes to a stronger cloud model when the internet is available.
      */
     fun preferLocalForChat(text: String): Boolean {
         val t = text.lowercase().trim()
         if (t.isEmpty()) return true
-        if (t.any { it in '\u0900'..'\u097F' }) return false
+        if (t.any { it !in 'a'..'z' && it !in '0'..'9' && it !in " \t\r\n.,?!'-" }) return false
         val words = t.split(Regex("\\s+"))
         if (words.size > 14) return false
         if (CURRENT_INFO.containsMatchIn(t) || COMPLEX.containsMatchIn(t)) return false
-        if (words.count { it.trim(',', '.', '?', '!') in HINGLISH } >= 2) return false
         return true
     }
 

@@ -11,12 +11,10 @@ object SensitiveActions {
         RegexOption.IGNORE_CASE,
     )
     private val YES = Regex(
-        """\b(yes|yeah|yep|yup|sure|ok|okay|confirm|confirmed|go ahead|do it|send it|haan|han|ha|theek hai|thik hai|kar do|bhej do)\b""",
+        """\b(yes|yeah|yep|yup|sure|ok|okay|confirm|confirmed|go ahead|do it|send it)\b""",
         RegexOption.IGNORE_CASE,
     )
-    private val NO = Regex("""\b(no|nope|don'?t|cancel|stop|wait|nahi|nahin|mat|ruko)\b""", RegexOption.IGNORE_CASE)
-    private val YES_HINDI = listOf("हाँ", "हां", "ठीक है", "कर दो", "भेज दो")
-    private val NO_HINDI = listOf("नहीं", "मत", "रुको")
+    private val NO = Regex("""\b(no|nope|don'?t|cancel|stop|wait)\b""", RegexOption.IGNORE_CASE)
 
     /** True if tapping a control with this label sends, places or deletes something. */
     fun needsConfirmation(label: String): Boolean = label.isNotBlank() && SENSITIVE.containsMatchIn(label)
@@ -24,8 +22,8 @@ object SensitiveActions {
     /** True only for a clear yes. Anything unclear, or containing a no, counts as "not confirmed". */
     fun isYes(answer: String?): Boolean {
         if (answer.isNullOrBlank()) return false
-        val no = NO.containsMatchIn(answer) || NO_HINDI.any { it in answer }
-        val yes = YES.containsMatchIn(answer) || YES_HINDI.any { it in answer }
+        val no = NO.containsMatchIn(answer)
+        val yes = YES.containsMatchIn(answer)
         return yes && !no
     }
 }

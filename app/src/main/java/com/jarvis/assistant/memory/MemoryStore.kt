@@ -379,5 +379,10 @@ class MemoryStore private constructor(context: Context) :
 
         fun get(context: Context): MemoryStore =
             instance ?: synchronized(this) { instance ?: MemoryStore(context).also { instance = it } }
+
+        fun resetForTesting() {
+            instance?.close()
+            instance = null
+        }
     }
 }

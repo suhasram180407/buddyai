@@ -44,9 +44,9 @@ object Setup {
         MICROPHONE(R.drawable.ic_mic, R.string.item_mic_title, R.string.item_mic_sub, R.string.allow, true),
         PHONE_CONTROL(R.drawable.ic_touch, R.string.item_control_title, R.string.item_control_sub, R.string.enable, true),
         BACKGROUND(R.drawable.ic_battery, R.string.item_bg_title, R.string.item_bg_sub, R.string.allow, false),
-        WAKE_WORD(R.drawable.ic_wave, R.string.item_wake_title, R.string.item_wake_sub, R.string.download, false),
-        SPEECH(R.drawable.ic_mic, R.string.item_speech_title, R.string.item_speech_sub, R.string.download, false),
-        VOICE(R.drawable.ic_voice, R.string.item_voice_title, R.string.item_voice_sub, R.string.download, false),
+        WAKE_WORD(R.drawable.ic_wave, R.string.item_wake_title, R.string.item_wake_sub, R.string.download, true),
+        SPEECH(R.drawable.ic_mic, R.string.item_speech_title, R.string.item_speech_sub, R.string.download, true),
+        VOICE(R.drawable.ic_voice, R.string.item_voice_title, R.string.item_voice_sub, R.string.download, true),
     }
 
     val PERMISSIONS: Array<String> = buildList {

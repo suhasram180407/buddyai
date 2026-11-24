@@ -61,7 +61,7 @@ class JarvisDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABAS
     }
 
     companion object {
-        const val DATABASE_NAME = "jarvis_memory.db"
+        const val DATABASE_NAME = "jarvis_manager.db"
         const val DATABASE_VERSION = 1
     }
 }

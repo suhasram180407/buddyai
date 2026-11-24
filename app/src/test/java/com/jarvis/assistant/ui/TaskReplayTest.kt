@@ -9,6 +9,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.jarvis.assistant.Settings
 import com.jarvis.assistant.memory.MemoryStore
 import com.jarvis.assistant.memory.TaskReplayDialog
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -21,6 +22,10 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class TaskReplayTest {
+    @After fun tearDown() {
+        MemoryStore.resetForTesting()
+    }
+
     @Test fun stepsCanBeRevisitedAndRotationKeepsThePosition() {
         val ctx = ApplicationProvider.getApplicationContext<Context>()
         Settings(ctx).onboarded = true

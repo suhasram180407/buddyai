@@ -24,16 +24,16 @@ import com.k2fsa.sherpa.onnx.OnlineStream
 import com.k2fsa.sherpa.onnx.OnlineTransducerModelConfig
 import java.io.File
 
-/** The "Hey Jarvis" keyword model: a 17 MB download, of which only ~5 MB of int8 files are kept. */
+/** The "Hey Buddy" keyword model: a 17 MB download, of which only ~5 MB of int8 files are kept. */
 object WakeModel {
     const val URL = "https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2"
     const val ENCODER = "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx"
     const val DECODER = "decoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx"
     const val JOINER = "joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx"
     val KEEP_FILES = setOf(ENCODER, DECODER, JOINER, "tokens.txt")
-    /** BPE tokens from the model's bpe.model, with per-keyword boost (:) and threshold (#). Tuned: 18/18 hits, 0/60 false alarms. */
-    const val KEYWORDS = "▁HE Y ▁JA R VI S :2.0 #0.1 @HEY_JARVIS\n▁JA R VI S :2.0 #0.15 @JARVIS\n"
-    /** Listened for while Jarvis speaks: "stop" cuts it off even when the words are drowned by its own voice. */
+    /** BPE tokens from the model's bpe.model for "Hey Buddy" and "Buddy", with per-keyword boost (:) and threshold (#). */
+    const val KEYWORDS = "▁HE Y ▁BU D D Y :2.0 #0.1 @HEY_BUDDY\n▁BU D D Y :2.0 #0.15 @BUDDY\n"
+    /** Listened for while Buddy speaks: "stop" cuts it off even when the words are drowned by its own voice. */
     const val STOP_KEYWORD = "▁ST O P :2.0 #0.15 @STOP"
     fun dir(context: Context) = File(context.filesDir, "kws")
     fun isInstalled(context: Context) = KEEP_FILES.all { File(dir(context), it).exists() }
@@ -150,7 +150,7 @@ class VoiceInput(private val context: Context, private val onWake: () -> Unit) {
         onBargeIn = bargeIn
         val custom = customWakePhrase
         speakingSaysName = (custom.isNotEmpty() && " ${words(spoken).joinToString(" ")} ".contains(" ${custom.lowercase()} ")) ||
-            words(spoken).any { it.length >= 4 && editDistance(it, "jarvis") <= 1 }
+            words(spoken).any { it.length >= 4 && (editDistance(it, "buddy") <= 1 || editDistance(it, "jarvis") <= 1) }
         speakingSaysStop = soundsLikeStop(spoken)
         speakingWords = words(spoken).toSet()
         muted = false
@@ -169,7 +169,7 @@ class VoiceInput(private val context: Context, private val onWake: () -> Unit) {
             if (spotter == null && WakeModel.isInstalled(context)) {
                 try {
                     val dir = WakeModel.dir(context)
-                    File(dir, "jarvis_keywords.txt").writeText(WakeModel.KEYWORDS)
+                    File(dir, "buddy_keywords.txt").writeText(WakeModel.KEYWORDS)
                     spotter = KeywordSpotter(
                         config = KeywordSpotterConfig(
                             featConfig = FeatureConfig(sampleRate = SAMPLE_RATE, featureDim = 80),
@@ -182,7 +182,7 @@ class VoiceInput(private val context: Context, private val onWake: () -> Unit) {
                                 tokens = File(dir, "tokens.txt").absolutePath,
                                 numThreads = 1,
                             ),
-                            keywordsFile = File(dir, "jarvis_keywords.txt").absolutePath,
+                            keywordsFile = File(dir, "buddy_keywords.txt").absolutePath,
                             keywordsScore = 2.0f,
                             keywordsThreshold = 0.1f,
                         ),
@@ -642,8 +642,8 @@ class VoiceInput(private val context: Context, private val onWake: () -> Unit) {
                     val one = letters(words[i])
                     val two = if (i + 1 < words.size) one + letters(words[i + 1]) else ""
                     when {
-                        one.length >= 4 && editDistance(one, "jarvis") <= 1 -> { cut = i + 1; break }
-                        two.length >= 5 && editDistance(two, "jarvis") <= 1 -> { cut = i + 2; break } // "jar vis"
+                        one.length >= 4 && (editDistance(one, "buddy") <= 1 || editDistance(one, "jarvis") <= 1) -> { cut = i + 1; break }
+                        two.length >= 5 && (editDistance(two, "buddy") <= 1 || editDistance(two, "jarvis") <= 1) -> { cut = i + 2; break }
                     }
                 }
             }

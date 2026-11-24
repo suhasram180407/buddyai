@@ -9,11 +9,14 @@ class CleanTranscriptTest {
     private fun c(s: String) = VoiceInput.clean(s)
 
     @Test fun stripsWakeWordVariants() {
+        assertEquals("Send my wife a message", c("hey buddy send my wife a message"))
+        assertEquals("Open Spotify", c("Buddy, open Spotify"))
         assertEquals("Send my wife a message", c("hey jarvis send my wife a message"))
         assertEquals("Turn on the flashlight", c("Page Arvis turn on the flashlight"))
         assertEquals("Open YouTube", c("Jarvis, open YouTube"))
         assertEquals("Call mum", c("okay hey jar vis call mum"))
         assertEquals("", c("Hey Jervis."))
+        assertEquals("", c("Hey Buddy."))
     }
 
     @Test fun stripsOnlyTheDetectedCustomPhraseAtTheStart() {

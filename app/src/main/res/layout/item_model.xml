@@ -78,14 +78,12 @@
                 tools:text="Claude (Anthropic) · claude-opus-5-5" />
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/star"
-            style="@style/Widget.Material3.Button.IconButton"
+        <com.google.android.material.radiobutton.MaterialRadioButton
+            android:id="@+id/selectRadio"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:contentDescription="@string/make_primary"
-            app:icon="@drawable/ic_star_outline"
-            app:iconTint="@color/accent"
-            tools:ignore="HardcodedText" />
+            android:gravity="center"
+            android:contentDescription="@string/primary_model"
+            app:buttonTint="@color/accent" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

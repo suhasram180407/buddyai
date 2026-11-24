@@ -88,7 +88,7 @@ class OnboardingActivity : AppCompatActivity() {
         refreshDownloads = null
         val done = isDone(step)
         ui.stepDone.visibility = if (done) View.VISIBLE else View.GONE
-        ui.skipButton.visibility = if (step == Step.WELCOME || done) View.GONE else View.VISIBLE
+        ui.skipButton.visibility = if (step == Step.WELCOME || step == Step.DOWNLOADS || done) View.GONE else View.VISIBLE
         ui.skipButton.text = getString(if (step == Step.DONE) R.string.skip_activation else R.string.skip_for_now)
 
         when (step) {
@@ -114,8 +114,11 @@ class OnboardingActivity : AppCompatActivity() {
             Step.DOWNLOADS -> {
                 val downloading = Downloads.progress.isNotEmpty()
                 show(R.drawable.ic_voice, R.string.ob_dl_title, getString(R.string.ob_dl_body),
-                    when { done || downloading -> R.string.continue_; else -> R.string.download_all })
+                    when { done -> R.string.continue_; downloading -> R.string.unpacking; else -> R.string.download_all })
                 refreshDownloads = Setup.bindRows(this, ui.stepExtra, DOWNLOADS).also { it() }
+                if (!done && !com.jarvis.assistant.ai.Connectivity.isOnline(this)) {
+                    addNote("Initial model provisioning requires an internet connection. Please connect to Wi-Fi or mobile data to download the offline voice pipeline.")
+                }
             }
             Step.MODEL -> {
                 val primary = settings.primary()
@@ -171,8 +174,10 @@ class OnboardingActivity : AppCompatActivity() {
             Step.PHONE_CONTROL -> Setup.act(this, Setup.Item.PHONE_CONTROL)
             Step.BACKGROUND -> { attempted += step; Setup.act(this, Setup.Item.BACKGROUND) }
             Step.DOWNLOADS -> {
-                if (Downloads.progress.isNotEmpty()) { next(); return }
-                DOWNLOADS.filter { !Setup.isDone(this, it) }.forEach { Setup.act(this, it) }
+                if (isDone(step)) { next(); return }
+                if (Downloads.progress.isEmpty()) {
+                    DOWNLOADS.filter { !Setup.isDone(this, it) }.forEach { Setup.act(this, it) }
+                }
             }
             Step.MODEL -> startActivity(Intent(this, ModelEditActivity::class.java))
             Step.DONE -> finishOnboarding(activate = true)

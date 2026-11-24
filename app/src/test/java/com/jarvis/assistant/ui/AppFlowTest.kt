@@ -73,16 +73,16 @@ class AppFlowTest {
 
     @Test
     fun addEditPrimaryAndDeleteModels() {
-        // Add a Claude model.
+        // Add a model (defaults to Groq).
         ActivityScenario.launch(ModelEditActivity::class.java).use { scenario ->
             scenario.onActivity { a ->
                 a.findViewById<android.widget.EditText>(R.id.apiKey).setText("sk-test")
                 a.findViewById<android.view.View>(R.id.saveButton).performClick()
             }
         }
-        val claude = settings.profiles().single()
-        assertEquals("anthropic", claude.providerId)
-        assertEquals(claude.id, settings.primaryId) // the first model becomes primary
+        val firstModel = settings.profiles().single()
+        assertEquals("groq", firstModel.providerId)
+        assertEquals(firstModel.id, settings.primaryId) // the first model becomes primary
 
         // Add LM Studio as a second model and make it primary.
         ActivityScenario.launch(ModelEditActivity::class.java).use { scenario ->
@@ -99,7 +99,7 @@ class AppFlowTest {
         val local = settings.profiles().first { it.providerId == "lmstudio" }
         assertEquals("http://192.168.1.50:1234/v1", local.baseUrl)
         assertEquals(local.id, settings.primaryId)
-        assertEquals(listOf(local.id, claude.id), settings.modelsInOrder().map { it.id })
+        assertEquals(listOf(local.id, firstModel.id), settings.modelsInOrder().map { it.id })
 
         // A missing key is caught before saving.
         ActivityScenario.launch(ModelEditActivity::class.java).use { scenario ->
@@ -112,8 +112,8 @@ class AppFlowTest {
 
         // Deleting the primary promotes the remaining model.
         settings.deleteProfile(local.id)
-        assertEquals(claude.id, settings.primaryId)
-        settings.deleteProfile(claude.id)
+        assertEquals(firstModel.id, settings.primaryId)
+        settings.deleteProfile(firstModel.id)
         assertNull(settings.primary())
     }
 
@@ -121,12 +121,12 @@ class AppFlowTest {
     fun oldSettingsAreMigrated() {
         ctx.getSharedPreferences("jarvis", Context.MODE_PRIVATE).edit()
             .putString("provider", "lmstudio")
-            .putString("p.anthropic.key", "sk-old")
+            .putString("p.groq.key", "sk-old")
             .putString("p.lmstudio.base", "http://10.0.0.5:1234/v1")
             .putString("p.lmstudio.model", "qwen")
             .commit()
         val names = settings.profiles().map { it.providerId }
-        assertEquals(listOf("anthropic", "lmstudio"), names)
+        assertEquals(listOf("groq", "lmstudio"), names)
         assertEquals("lmstudio", settings.primary()?.providerId)
     }
 

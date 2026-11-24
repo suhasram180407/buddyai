@@ -140,6 +140,8 @@ class FastActionExecutor(
         is FastCommand.SetMode -> setMode(cmd.mode)
         is FastCommand.SetLanguage -> setLanguage(cmd.lang)
         is FastCommand.RuntimeControl -> runtimeControl(cmd.action)
+        is FastCommand.FileOp -> fileOp(cmd)
+        is FastCommand.CountMedia -> countMedia(cmd.type)
     }
 
     // ---- Apps ----
@@ -177,7 +179,7 @@ class FastActionExecutor(
         val started = if (svc != null) svc.openPackage(entry.packageName, entry.activity) else startLaunchIntent(entry.packageName)
         if (!started) return Result(true, false, "I couldn't open ${entry.label}.", entry, m.how)
         if (svc == null) {
-            return Result(true, false, "I tried to open ${entry.label}. Turn on phone control in Jarvis so I can open apps reliably.", entry, m.how)
+            return Result(true, false, "I tried to open ${entry.label}. Turn on phone control in Buddy AI so I can open apps reliably.", entry, m.how)
         }
         val shown = svc.waitForForeground(entry.packageName, FOREGROUND_WAIT_MS)
         val msg = if (shown) "Opened ${entry.label}." else "I asked Android to open ${entry.label}, but I couldn't confirm it came to the front."
@@ -206,7 +208,7 @@ class FastActionExecutor(
     }
 
     private inline fun withPhoneControl(block: (JarvisAccessibilityService) -> Result): Result {
-        val svc = a11y ?: return Result(true, false, "Please turn on phone control in the Jarvis app first.")
+        val svc = a11y ?: return Result(true, false, "Please turn on phone control in the Buddy AI app first.")
         return block(svc)
     }
 
@@ -327,7 +329,7 @@ class FastActionExecutor(
         val intent = Intent(AlarmClock.ACTION_SET_ALARM)
             .putExtra(AlarmClock.EXTRA_HOUR, cmd.hour)
             .putExtra(AlarmClock.EXTRA_MINUTES, cmd.minute)
-            .putExtra(AlarmClock.EXTRA_MESSAGE, "Jarvis")
+            .putExtra(AlarmClock.EXTRA_MESSAGE, "Buddy AI")
             .putExtra(AlarmClock.EXTRA_SKIP_UI, true)
         val ok = startIntent(intent)
         val h12 = if (cmd.hour % 12 == 0) 12 else cmd.hour % 12
@@ -338,7 +340,7 @@ class FastActionExecutor(
     private fun setTimer(cmd: FastCommand.SetTimer): Result {
         val intent = Intent(AlarmClock.ACTION_SET_TIMER)
             .putExtra(AlarmClock.EXTRA_LENGTH, cmd.seconds)
-            .putExtra(AlarmClock.EXTRA_MESSAGE, "Jarvis")
+            .putExtra(AlarmClock.EXTRA_MESSAGE, "Buddy AI")
             .putExtra(AlarmClock.EXTRA_SKIP_UI, true)
         val ok = startIntent(intent)
         val minutes = cmd.seconds / 60
@@ -359,7 +361,7 @@ class FastActionExecutor(
      */
     private fun playYouTube(rawQuery: String, recordStep: (String) -> Unit): Result {
         val query = YouTubeAction.cleanQuery(rawQuery)
-        val svc = a11y ?: return Result(true, false, "Please turn on phone control in the Jarvis app first.")
+        val svc = a11y ?: return Result(true, false, "Please turn on phone control in the Buddy AI app first.")
         val installed = installedApps().any { it.packageName == YouTubeAction.packageName }
         if (!installed) {
             val url = "https://www.youtube.com/results?search_query=" + URLEncoder.encode(query, "UTF-8")
@@ -470,6 +472,77 @@ class FastActionExecutor(
             val level = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
             Result(true, true, "Battery is at $level percent${if (bm.isCharging) " and charging" else ""}.")
         }
+        QueryKind.VOLUME -> {
+            val am = app.getSystemService(AudioManager::class.java)
+            val stream = AudioManager.STREAM_MUSIC
+            val max = am.getStreamMaxVolume(stream).coerceAtLeast(1)
+            val cur = am.getStreamVolume(stream)
+            val percent = (cur * 100f / max).roundToInt()
+            Result(true, true, if (am.isStreamMute(stream)) "Volume is muted." else "Volume is at $percent percent.")
+        }
+    }
+
+    private fun countMedia(type: String): Result {
+        return try {
+            val (uri, label) = if (type.contains("video")) {
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI to "video"
+            } else {
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI to "photo"
+            }
+            val cursor = app.contentResolver.query(uri, arrayOf(MediaStore.MediaColumns._ID), null, null, null)
+            val count = cursor?.use { it.count } ?: 0
+            Result(true, true, "Found $count accessible ${label}s.")
+        } catch (e: Exception) {
+            Result(true, false, "Could not access media: ${e.message}")
+        }
+    }
+
+    private fun fileOp(op: FastCommand.FileOp): Result {
+        val baseDir = app.getExternalFilesDir(null) ?: app.filesDir
+        fun resolveFile(name: String): java.io.File {
+            val direct = java.io.File(baseDir, name)
+            if (direct.exists()) return direct
+            val dotted = java.io.File(baseDir, name.replace(" ", "."))
+            if (dotted.exists()) return dotted
+            val withTxt = java.io.File(baseDir, "$name.txt")
+            if (withTxt.exists()) return withTxt
+            return direct
+        }
+        return try {
+            when (op.action) {
+                "list" -> {
+                    val files = baseDir.listFiles()?.map { it.name } ?: emptyList()
+                    if (files.isEmpty()) Result(true, true, "No files found in local storage.")
+                    else Result(true, true, "Files: ${files.joinToString(", ")}.")
+                }
+                "find" -> {
+                    val f = resolveFile(op.filename)
+                    if (f.exists()) Result(true, true, "Found file ${f.name} (${f.length()} bytes).")
+                    else Result(true, false, "File ${op.filename} does not exist.")
+                }
+                "read" -> {
+                    val f = resolveFile(op.filename)
+                    if (!f.exists()) Result(true, false, "File ${op.filename} not found.")
+                    else {
+                        val text = f.readText().take(500)
+                        Result(true, true, "Content of ${f.name}: $text")
+                    }
+                }
+                "create" -> {
+                    val f = resolveFile(op.filename)
+                    f.writeText(op.content)
+                    Result(true, true, "Created file ${f.name} with ${op.content.length} characters.")
+                }
+                "append" -> {
+                    val f = resolveFile(op.filename)
+                    f.appendText(op.content)
+                    Result(true, true, "Appended to ${f.name}.")
+                }
+                else -> Result(true, false, "Unsupported file operation.")
+            }
+        } catch (e: Exception) {
+            Result(true, false, "File operation failed: ${e.message}")
+        }
     }
 
     private fun setMode(mode: AiMode): Result {
@@ -508,9 +581,9 @@ class FastActionExecutor(
     }
 
     private fun setLanguage(lang: String): Result {
-        settings.speechLanguage = lang
+        settings.speechLanguage = "en"
         return if (lang == "hi") {
-            Result(true, true, "Okay. I'll listen for Hindi and Hinglish with Google speech recognition, and answer in English.")
+            Result(true, true, "Buddy AI is an English-only assistant. I'll continue listening in English.")
         } else {
             Result(true, true, "Okay. English with offline recognition.")
         }

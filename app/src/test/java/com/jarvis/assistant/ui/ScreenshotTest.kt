@@ -39,9 +39,9 @@ class ScreenshotTest {
 
     private fun withModels() = Settings(ctx).apply {
         onboarded = true
-        saveProfile(ModelProfile(name = "Claude Opus", providerId = "anthropic", baseUrl = "https://api.anthropic.com", apiKey = "k", model = "claude-opus-5-5"))
+        saveProfile(ModelProfile(name = "Groq", providerId = "groq", baseUrl = "https://api.groq.com/openai/v1", apiKey = "k", model = "qwen/qwen3.8-27b"))
         saveProfile(ModelProfile(name = "Home PC (LM Studio)", providerId = "lmstudio", baseUrl = "http://192.168.1.50:1234/v1", apiKey = "", model = "qwen3-14b"))
-        saveProfile(ModelProfile(name = "GPT", providerId = "openai", baseUrl = "https://api.openai.com/v1", apiKey = "k", model = "gpt-5"))
+        saveProfile(ModelProfile(name = "Google Gemini", providerId = "gemini", baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai", apiKey = "k", model = "gemini-2.0-flash"))
     }
 
     @Test

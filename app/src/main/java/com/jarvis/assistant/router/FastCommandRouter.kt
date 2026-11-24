@@ -26,7 +26,7 @@ object FastCommandRouter {
     private val UP_WORDS = setOf("up", "increase", "raise", "louder", "higher", "badhao", "badha", "zyada", "jyada", "full", "max", "maximum")
     private val DOWN_WORDS = setOf("down", "decrease", "lower", "reduce", "quieter", "softer", "kam", "ghatao", "ghata", "low", "min", "minimum")
 
-    private val TORCH_WORDS = setOf("flashlight", "torch", "flash", "tourch", "tarch", "flashlite")
+    private val TORCH_WORDS = setOf("flashlight", "torch", "flash", "tourch", "tarch", "flashlite", "light")
     private val ON_WORDS = setOf("on", "enable", "jalao", "jala", "chalu", "start", "shuru", "laga", "lagao", "activate")
     private val OFF_WORDS = setOf("off", "disable", "band", "bujhao", "bujha", "stop", "shut", "deactivate")
 
@@ -40,6 +40,13 @@ object FastCommandRouter {
     private val TIME = Regex("""^(?:what(?: s|s| is)? the time(?: now| right now)?|what time is it(?: now| right now)?|tell me the time|current time|time kya hai|time kya hua hai|time kitna hua hai|kitne baje hain?|time batao|time bata do)$""")
     private val DATE = Regex("""^(?:what(?: s|s| is)? (?:the )?(?:date|day)(?: today| is it)?|what day is it(?: today)?|today s date|todays date|aaj (?:ki )?date(?: kya hai)?|aaj kya date hai|aaj kaun sa din hai|aaj konsa din hai|date kya hai|which day is it)$""")
     private val BATTERY = Regex("""^(?:what(?: s|s| is)? (?:the )?battery(?: level| percentage| percent)?|how much battery(?: is left| do i have| left)?|battery (?:level|percentage|percent|status)|battery kitni (?:hai|hain|bachi hai)|battery kitna hai|battery kitne percent hai)$""")
+    private val VOLUME_QUERY = Regex("""^(?:what(?: s|s| is)? (?:the )?(?:current )?volume(?: level)?|how loud is it|volume (?:status|level|check)|tell me the volume)$""")
+
+    private val MEDIA_COUNT = Regex("""^(?:count|how many) (videos?|photos?|images?|pictures?)(?: do i have| are there)?$""")
+    private val FILE_LIST = Regex("""^(?:list|show|get)(?: all)? (?:my )?files$""")
+    private val FILE_FIND = Regex("""^(?:find|search|locate)(?: the)? file (.+)$""")
+    private val FILE_READ = Regex("""^(?:read|open|show|cat)(?: the)? file (.+)$""")
+    private val FILE_CREATE = Regex("""^(?:create|write|make|new)(?: file)? (.+?) with (.+)$""")
 
     private val DURATION = Regex("""(\d+)\s*(seconds?|secs?|minutes?|mins?|minat|hours?|hrs?|ghanta|ghante|ghantey)""")
     private val CLOCK = Regex("""\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|baje|bje)?(?=\s|$)""")
@@ -86,20 +93,53 @@ object FastCommandRouter {
     private val OPEN_BLOCKED = setOf("it", "this", "that", "something", "anything", "a", "an", "one", "up")
 
     /** Returns the command if [raw] is a complete simple command, otherwise null. */
-    fun parse(raw: String): FastCommand? {
+    fun parse(raw: String, lastCommand: FastCommand? = null): FastCommand? {
         val t = Lexicon.clean(raw)
         if (t.isEmpty()) return null
         val words = t.split(' ')
         if (words.size > MAX_WORDS) return null
+        if (lastCommand != null) {
+            followUp(t, lastCommand)?.let { return it }
+        }
         return mode(t) ?: language(t, words) ?: runtime(t)
             ?: press(t) ?: screenshotOrLock(t) ?: scroll(words)
-            ?: volume(t, words) ?: flashlight(words) ?: media(words)
+            ?: volume(t, words) ?: flashlight(words, t) ?: media(words)
             ?: query(t) ?: timerOrAlarm(t, words) ?: dial(t) ?: callContact(t)
             ?: settingsPage(t, words) ?: camera(t)
+            ?: mediaCount(t) ?: fileOp(t)
             ?: playYouTube(t)
             ?: open(t)
             ?: search(t)
             ?: typeText(raw) ?: tap(t)
+    }
+
+    private fun followUp(t: String, lastCommand: FastCommand): FastCommand? = when (lastCommand) {
+        is FastCommand.Flashlight -> when (t) {
+            "turn it off", "turn off", "turn off flashlight", "turn off torch", "turn off light", "shut it off", "switch it off", "stop", "off" ->
+                FastCommand.Flashlight(false)
+            "turn it on", "turn on", "turn on flashlight", "turn on torch", "turn on light", "switch it on", "start", "on" ->
+                FastCommand.Flashlight(true)
+            else -> null
+        }
+        is FastCommand.Media -> when (t) {
+            "turn it off", "stop", "pause it", "pause", "stop it" ->
+                FastCommand.Media(MediaAction.PAUSE)
+            "play", "resume", "continue", "start" ->
+                FastCommand.Media(MediaAction.PLAY)
+            "next", "skip", "next song", "next track" ->
+                FastCommand.Media(MediaAction.NEXT)
+            "previous", "prev", "previous song" ->
+                FastCommand.Media(MediaAction.PREVIOUS)
+            else -> null
+        }
+        is FastCommand.Volume -> when (t) {
+            "louder", "more", "a bit more", "increase", "higher", "turn it up", "up" ->
+                FastCommand.Volume(VolumeChange.UP)
+            "quieter", "less", "softer", "a bit less", "decrease", "lower", "turn it down", "down" ->
+                FastCommand.Volume(VolumeChange.DOWN)
+            else -> null
+        }
+        else -> null
     }
 
     /**
@@ -112,6 +152,7 @@ object FastCommandRouter {
         is FastCommand.Press, is FastCommand.Scroll, is FastCommand.Flashlight, is FastCommand.Media,
         is FastCommand.Ask, is FastCommand.SetMode, is FastCommand.SetLanguage, is FastCommand.OpenSettings, is FastCommand.RuntimeControl,
         FastCommand.Screenshot, FastCommand.LockScreen, FastCommand.OpenCamera,
+        is FastCommand.CountMedia, is FastCommand.FileOp,
         -> 600L
         is FastCommand.Volume -> 600L
         else -> null
@@ -182,7 +223,9 @@ object FastCommandRouter {
         }
     }
 
-    private fun flashlight(words: List<String>): FastCommand? {
+    private fun flashlight(words: List<String>, t: String = ""): FastCommand? {
+        if (t == "turn it off" || t == "turn off") return FastCommand.Flashlight(false)
+        if (t == "turn it on" || t == "turn on") return FastCommand.Flashlight(true)
         if (words.size > 6 || words.none { it in TORCH_WORDS }) return null
         val on = words.any { it in ON_WORDS }
         val off = words.any { it in OFF_WORDS }
@@ -211,7 +254,21 @@ object FastCommandRouter {
         TIME.matches(t) -> FastCommand.Ask(QueryKind.TIME)
         DATE.matches(t) -> FastCommand.Ask(QueryKind.DATE)
         BATTERY.matches(t) -> FastCommand.Ask(QueryKind.BATTERY)
+        VOLUME_QUERY.matches(t) -> FastCommand.Ask(QueryKind.VOLUME)
         else -> null
+    }
+
+    private fun mediaCount(t: String): FastCommand? {
+        val m = MEDIA_COUNT.matchEntire(t) ?: return null
+        return FastCommand.CountMedia(m.groupValues[1])
+    }
+
+    private fun fileOp(t: String): FastCommand? {
+        if (FILE_LIST.matches(t)) return FastCommand.FileOp("list")
+        FILE_FIND.matchEntire(t)?.let { return FastCommand.FileOp("find", filename = it.groupValues[1].trim()) }
+        FILE_READ.matchEntire(t)?.let { return FastCommand.FileOp("read", filename = it.groupValues[1].trim()) }
+        FILE_CREATE.matchEntire(t)?.let { return FastCommand.FileOp("create", filename = it.groupValues[1].trim(), content = it.groupValues[2].trim()) }
+        return null
     }
 
     private fun durationSeconds(t: String): Int {

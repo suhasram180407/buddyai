@@ -2,6 +2,7 @@ package com.jarvis.assistant.memory
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -19,9 +20,15 @@ class MemoryManagerTest {
 
     @Before
     fun setup() {
+        MemoryManager.resetForTesting()
         val context = ApplicationProvider.getApplicationContext<Context>()
         memory = MemoryManager.get(context)
         memory.clearAll()
+    }
+
+    @After
+    fun tearDown() {
+        MemoryManager.resetForTesting()
     }
 
     @Test

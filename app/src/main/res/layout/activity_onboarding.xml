@@ -75,7 +75,7 @@
                 android:gravity="center"
                 android:textColor="@color/text"
                 android:textSize="22sp"
-                tools:text="Let Jarvis hear you" />
+                tools:text="Let Buddy hear you" />
 
             <TextView
                 android:id="@+id/stepBody"
@@ -86,7 +86,7 @@
                 android:lineSpacingExtra="4dp"
                 android:textColor="@color/text_dim"
                 android:textSize="15sp"
-                tools:text="Jarvis needs the microphone to hear “Hey Jarvis” and your commands." />
+                tools:text="Buddy needs the microphone to hear “Hey Buddy” and your commands." />
 
             <LinearLayout
                 android:id="@+id/stepExtra"

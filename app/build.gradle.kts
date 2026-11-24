@@ -11,7 +11,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.jarvis.assistant"
+        applicationId = "com.buddy.assistant"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -47,9 +47,9 @@ android {
             if (keystore != null) signingConfig = signingConfigs.getByName("release")
         }
     }
-    // Lists the app's languages so Android 13+ offers Jarvis under Settings > Apps > Language.
+    // English-only assistant
     androidResources {
-        generateLocaleConfig = true
+        generateLocaleConfig = false
     }
 
     buildFeatures {
