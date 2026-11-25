@@ -14,15 +14,15 @@ import org.robolectric.annotation.Config
 class MemoryLabelsTest {
     private val ctx get() = ApplicationProvider.getApplicationContext<Context>()
 
-    @Test @Config(qualifiers = "hi")
-    fun storedEnglishLabelsAreShownInHindi() {
+    @Test @Config(qualifiers = "ta")
+    fun storedEnglishLabelsAreShownInTamil() {
         val task = MemoryStore.Item(MemoryStore.Kind.TASK, 1, "open maps", "Completed · 23/11/2026 08:00")
-        assertEquals("पूरा हुआ · 23/11/2026 08:00", MemoryLabels.detail(ctx, task))
+        assertEquals("முடிந்தது · 23/11/2026 08:00", MemoryLabels.detail(ctx, task))
         val alias = MemoryStore.Item(MemoryStore.Kind.ALIAS, 2, "\"yt\" opens YouTube", "App name")
-        assertEquals("\"yt\" से YouTube खुलता है", MemoryLabels.title(ctx, alias))
-        assertEquals("ऐप का नाम", MemoryLabels.detail(ctx, alias))
-        assertEquals("रद्द किया गया", MemoryLabels.word(ctx, "Cancelled"))
-        assertEquals("कदम 2 / 3\n\nOpened Maps.", ctx.getString(R.string.step_of, 2, 3, "Opened Maps."))
+        assertEquals("\"yt\" என்பது YouTube-ஐத் திறக்கும்", MemoryLabels.title(ctx, alias))
+        assertEquals("செயலி பெயர்", MemoryLabels.detail(ctx, alias))
+        assertEquals("ரத்து செய்யப்பட்டது", MemoryLabels.word(ctx, "Cancelled"))
+        assertEquals("படி 2 / 3\n\nOpened Maps.", ctx.getString(R.string.step_of, 2, 3, "Opened Maps."))
     }
 
     @Test

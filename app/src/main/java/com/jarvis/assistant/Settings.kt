@@ -239,10 +239,10 @@ class Settings(context: Context) {
         get() = AiMode.parse(prefs.getString("ai_mode", null))
         set(v) = prefs.edit().putString("ai_mode", v.name).apply()
 
-    /** English only. */
+    /** Speech recognition language: "en" for English (offline Zipformer), "ta" for Tamil / Tanglish. */
     var speechLanguage: String
-        get() = "en"
-        set(_) = prefs.edit().putString("speech_lang", "en").apply()
+        get() = prefs.getString("speech_lang", "en") ?: "en"
+        set(v) = prefs.edit().putString("speech_lang", if (v == "ta") "ta" else "en").apply()
 
     /** Ask before placing calls or sending messages. */
     var confirmSensitive: Boolean

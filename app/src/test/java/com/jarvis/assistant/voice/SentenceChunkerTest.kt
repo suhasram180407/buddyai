@@ -40,9 +40,9 @@ class SentenceChunkerTest {
         assertTrue(out.none { it.contains('*') || it.contains('`') || it.contains('#') })
     }
 
-    @Test fun hindiSentenceEndsAreRespected() {
-        val out = stream(SentenceChunker(minLength = 10), "आज मौसम बहुत अच्छा है। कल बारिश हो सकती है।")
-        assertEquals(listOf("आज मौसम बहुत अच्छा है।", "कल बारिश हो सकती है।"), out)
+    @Test fun tamilSentenceEndsAreRespected() {
+        val out = stream(SentenceChunker(minLength = 10), "இன்று வானிலை நன்றாக உள்ளது. நாளை மழை பெய்ய வாய்ப்புள்ளது.")
+        assertEquals(listOf("இன்று வானிலை நன்றாக உள்ளது.", "நாளை மழை பெய்ய வாய்ப்புள்ளது."), out)
     }
 
     @Test fun aVeryLongSentenceIsCutAtACommaInsteadOfMakingTheUserWait() {
@@ -56,7 +56,7 @@ class SentenceChunkerTest {
     @Test fun sseLines() {
         assertEquals(SseParser.Event.Text("Hello"), SseParser.parseLine("""data: {"choices":[{"delta":{"content":"Hello"}}]}"""))
         assertEquals(SseParser.Event.Text(" wor\"ld\n"), SseParser.parseLine("""data: {"choices":[{"index":0,"delta":{"role":"assistant","content":" wor\"ld\n"}}]}"""))
-        assertEquals(SseParser.Event.Text("नमस्ते"), SseParser.parseLine("""data: {"choices":[{"delta":{"content":"\u0928\u092e\u0938\u094d\u0924\u0947"}}]}"""))
+        assertEquals(SseParser.Event.Text("வணக்கம்"), SseParser.parseLine("""data: {"choices":[{"delta":{"content":"\u0bb5\u0ba3\u0b95\u0bcd\u0b95\u0bae\u0bcd"}}]}"""))
         assertEquals(SseParser.Event.Done, SseParser.parseLine("data: [DONE]"))
         assertEquals(SseParser.Event.Other, SseParser.parseLine("""data: {"choices":[{"delta":{"content":null}}]}"""))
         assertEquals(SseParser.Event.Other, SseParser.parseLine("""data: {"choices":[{"delta":{}}]}"""))

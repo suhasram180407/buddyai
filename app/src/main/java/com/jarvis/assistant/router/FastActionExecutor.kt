@@ -581,10 +581,11 @@ class FastActionExecutor(
     }
 
     private fun setLanguage(lang: String): Result {
-        settings.speechLanguage = "en"
-        return if (lang == "hi") {
-            Result(true, true, "Buddy AI is an English-only assistant. I'll continue listening in English.")
+        return if (lang == "ta") {
+            settings.speechLanguage = "ta"
+            Result(true, true, "தமிழ் மொழி முறைக்கு மாற்றப்பட்டது. நான் தமிழில் கேட்கிறேன்.")
         } else {
+            settings.speechLanguage = "en"
             Result(true, true, "Okay. English with offline recognition.")
         }
     }

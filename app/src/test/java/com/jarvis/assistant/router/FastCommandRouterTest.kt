@@ -16,22 +16,22 @@ class FastCommandRouterTest {
         assertEquals(FastCommand.OpenApp("play store"), p("can you open play store please"))
     }
 
-    @Test fun opensAppsInHinglishAndHindi() {
-        assertEquals(FastCommand.OpenApp("youtube"), p("YouTube kholo"))
-        assertEquals(FastCommand.OpenApp("whatsapp"), p("WhatsApp khol do"))
-        assertEquals(FastCommand.OpenApp("youtube"), p("यूट्यूब खोलो"))
-        assertEquals(FastCommand.OpenApp("whatsapp"), p("व्हाट्सएप खोलो"))
-        assertEquals(FastCommand.OpenApp("instagram"), p("open karo instagram"))
+    @Test fun opensAppsInTamilAndTanglish() {
+        assertEquals(FastCommand.OpenApp("youtube"), p("YouTube open pannu"))
+        assertEquals(FastCommand.OpenApp("whatsapp"), p("WhatsApp thira"))
+        assertEquals(FastCommand.OpenApp("youtube"), p("யூடியூப் திற"))
+        assertEquals(FastCommand.OpenApp("whatsapp"), p("வாட்ஸ்அப் திற"))
+        assertEquals(FastCommand.OpenApp("spotify"), p("Spotify open pannu"))
     }
 
     @Test fun navigationKeys() {
         assertEquals(FastCommand.Press("back"), p("go back"))
         assertEquals(FastCommand.Press("back"), p("back"))
-        assertEquals(FastCommand.Press("back"), p("peeche jao"))
-        assertEquals(FastCommand.Press("back"), p("वापस जाओ"))
+        assertEquals(FastCommand.Press("back"), p("back po"))
+        assertEquals(FastCommand.Press("back"), p("பின்னால் போ"))
         assertEquals(FastCommand.Press("home"), p("go home"))
         assertEquals(FastCommand.Press("home"), p("home screen"))
-        assertEquals(FastCommand.Press("home"), p("होम"))
+        assertEquals(FastCommand.Press("home"), p("முகப்பு"))
         assertEquals(FastCommand.Press("recents"), p("show recent apps"))
         assertEquals(FastCommand.Press("notifications"), p("open notifications"))
         assertEquals(FastCommand.Press("quick_settings"), p("quick settings"))
@@ -41,8 +41,9 @@ class FastCommandRouterTest {
         assertEquals(FastCommand.Scroll("down"), p("scroll down"))
         assertEquals(FastCommand.Scroll("up"), p("scroll up"))
         assertEquals(FastCommand.Scroll("left"), p("swipe left"))
-        assertEquals(FastCommand.Scroll("down"), p("neeche scroll karo"))
-        assertEquals(FastCommand.Scroll("up"), p("upar scroll karo"))
+        assertEquals(FastCommand.Scroll("down"), p("keezhe scroll pannu"))
+        assertEquals(FastCommand.Scroll("up"), p("mela scroll pannu"))
+        assertEquals(FastCommand.Scroll("down"), p("கீழே உருட்டு"))
         assertNull(p("scroll through my instagram feed and like the first five posts"))
     }
 
@@ -53,17 +54,19 @@ class FastCommandRouterTest {
         assertEquals(FastCommand.Volume(VolumeChange.SET, 40), p("set volume to 40"))
         assertEquals(FastCommand.Volume(VolumeChange.SET, 100), p("volume 250"))
         assertEquals(FastCommand.Volume(VolumeChange.MUTE), p("mute"))
-        assertEquals(FastCommand.Volume(VolumeChange.UP), p("volume badhao"))
-        assertEquals(FastCommand.Volume(VolumeChange.DOWN), p("awaaz kam karo"))
-        assertEquals(FastCommand.Volume(VolumeChange.UP), p("वॉल्यूम बढ़ाओ"))
+        assertEquals(FastCommand.Volume(VolumeChange.UP), p("volume ethu"))
+        assertEquals(FastCommand.Volume(VolumeChange.DOWN), p("volume kammi pannu"))
+        assertEquals(FastCommand.Volume(VolumeChange.UP), p("வால்யூம் கூட்டு"))
+        assertEquals(FastCommand.Volume(VolumeChange.DOWN), p("வால்யூம் குறை"))
     }
 
     @Test fun flashlight() {
         assertEquals(FastCommand.Flashlight(true), p("turn on the flashlight"))
         assertEquals(FastCommand.Flashlight(false), p("flashlight off"))
-        assertEquals(FastCommand.Flashlight(true), p("torch jalao"))
-        assertEquals(FastCommand.Flashlight(true), p("टॉर्च चालू करो"))
-        assertEquals(FastCommand.Flashlight(false), p("torch band karo"))
+        assertEquals(FastCommand.Flashlight(true), p("torch light on pannu"))
+        assertEquals(FastCommand.Flashlight(true), p("டார்ச் லைட் ஆன் பண்ணு"))
+        assertEquals(FastCommand.Flashlight(false), p("torch light off pannu"))
+        assertEquals(FastCommand.Flashlight(false), p("டார்ச் லைட் ஆஃப் பண்ணு"))
         assertEquals(FastCommand.Flashlight(null), p("torch"))
     }
 
@@ -73,29 +76,34 @@ class FastCommandRouterTest {
         assertEquals(FastCommand.Media(MediaAction.PAUSE), p("stop music"))
         assertEquals(FastCommand.Media(MediaAction.NEXT), p("next song"))
         assertEquals(FastCommand.Media(MediaAction.PREVIOUS), p("previous song"))
-        assertEquals(FastCommand.Media(MediaAction.PLAY), p("gaana bajao"))
-        assertEquals(FastCommand.Media(MediaAction.NEXT), p("agla gaana"))
+        assertEquals(FastCommand.Media(MediaAction.PLAY), p("paattu podu"))
+        assertEquals(FastCommand.Media(MediaAction.PLAY), p("பாட்டு போடு"))
+        assertEquals(FastCommand.Media(MediaAction.NEXT), p("adutha paattu"))
+        assertEquals(FastCommand.Media(MediaAction.NEXT), p("அடுத்த பாட்டு"))
         assertNull(p("play despacito"))
     }
 
     @Test fun questionsAnsweredLocally() {
         assertEquals(FastCommand.Ask(QueryKind.TIME), p("what time is it"))
         assertEquals(FastCommand.Ask(QueryKind.TIME), p("what's the time"))
-        assertEquals(FastCommand.Ask(QueryKind.TIME), p("kitne baje hain"))
+        assertEquals(FastCommand.Ask(QueryKind.TIME), p("mani enna"))
+        assertEquals(FastCommand.Ask(QueryKind.TIME), p("நேரம் என்ன"))
         assertEquals(FastCommand.Ask(QueryKind.DATE), p("what's the date"))
         assertEquals(FastCommand.Ask(QueryKind.BATTERY), p("battery level"))
         assertEquals(FastCommand.Ask(QueryKind.BATTERY), p("how much battery is left"))
+        assertEquals(FastCommand.Ask(QueryKind.BATTERY), p("battery evlo irukku"))
+        assertEquals(FastCommand.Ask(QueryKind.BATTERY), p("பேட்டரி எவ்வளவு இருக்கு"))
     }
 
     @Test fun timersAndAlarms() {
         assertEquals(FastCommand.SetTimer(300), p("set a timer for 5 minutes"))
-        assertEquals(FastCommand.SetTimer(300), p("5 minute ka timer"))
+        assertEquals(FastCommand.SetTimer(300), p("5 minute ku timer vai"))
         assertEquals(FastCommand.SetTimer(3600 + 1800), p("timer for 1 hour 30 minutes"))
         assertEquals(FastCommand.SetAlarm(7, 0), p("set an alarm for 7 am"))
         assertEquals(FastCommand.SetAlarm(18, 30), p("set alarm for 6:30 pm"))
         assertEquals(FastCommand.SetAlarm(6, 0), p("wake me up at 6"))
-        assertEquals(FastCommand.SetAlarm(6, 0), p("subah 6 baje alarm laga do"))
-        assertEquals(FastCommand.SetAlarm(17, 0), p("shaam 5 baje alarm lagao"))
+        assertEquals(FastCommand.SetAlarm(6, 0), p("kaalai 6 mani ku alarm vai"))
+        assertEquals(FastCommand.SetAlarm(17, 0), p("maalai 5 mani ku alarm vai"))
         assertEquals(FastCommand.SetAlarm(0, 0), p("alarm for 12 am"))
         assertEquals(FastCommand.SetAlarm(12, 0), p("alarm for 12 pm"))
         assertEquals(FastCommand.SetTimer(600), p("set alarm in 10 minutes"))
@@ -104,21 +112,22 @@ class FastCommandRouterTest {
 
     @Test fun dialOnlyWithRealNumbers() {
         assertEquals(FastCommand.Dial("9876543210"), p("call 9876543210"))
-        assertEquals(FastCommand.Dial("9876543210"), p("9876543210 ko call karo"))
+        assertEquals(FastCommand.Dial("9876543210"), p("9876543210 ku call pannu"))
         assertNull(p("call 98765")) // too short to be a number, and a name cannot contain digits
     }
 
     @Test fun settingsPages() {
         assertEquals(FastCommand.OpenSettings("wifi"), p("open wifi settings"))
-        assertEquals(FastCommand.OpenSettings("bluetooth"), p("bluetooth settings kholo"))
+        assertEquals(FastCommand.OpenSettings("bluetooth"), p("bluetooth settings thira"))
         assertEquals(FastCommand.OpenSettings("wifi", true), p("turn on wifi"))
-        assertEquals(FastCommand.OpenSettings("bluetooth", true), p("bluetooth chalu karo"))
+        assertEquals(FastCommand.OpenSettings("bluetooth", true), p("bluetooth on pannu"))
         assertEquals(FastCommand.OpenSettings("airplane", true), p("turn off airplane mode"))
     }
 
     @Test fun cameraScreenshotLock() {
         assertEquals(FastCommand.OpenCamera, p("open camera"))
-        assertEquals(FastCommand.OpenCamera, p("कैमरा खोलो"))
+        assertEquals(FastCommand.OpenCamera, p("camera thira"))
+        assertEquals(FastCommand.OpenCamera, p("கேமரா திற"))
         assertEquals(FastCommand.Screenshot, p("take a screenshot"))
         assertEquals(FastCommand.LockScreen, p("lock the phone"))
     }
@@ -127,7 +136,7 @@ class FastCommandRouterTest {
         assertEquals(FastCommand.WebSearch("pizza near me", "google"), p("search for pizza near me"))
         assertEquals(FastCommand.WebSearch("weather in delhi", "google"), p("google weather in delhi"))
         assertEquals(FastCommand.WebSearch("cats", "youtube"), p("search cats on youtube"))
-        assertEquals(FastCommand.WebSearch("lofi music", "youtube"), p("youtube par lofi music search karo"))
+        assertEquals(FastCommand.WebSearch("lofi music", "youtube"), p("youtube la lofi music search pannu"))
         assertNull(p("search for songs on spotify"))
     }
 
@@ -147,17 +156,17 @@ class FastCommandRouterTest {
         assertEquals(FastCommand.SetMode(AiMode.ONLINE), p("go online"))
         assertEquals(FastCommand.SetMode(AiMode.AUTO), p("automatic mode"))
         assertNull(p("online"))
-        assertEquals(FastCommand.SetLanguage("hi"), p("hindi mode"))
-        assertEquals(FastCommand.SetLanguage("hi"), p("listen in hindi"))
+        assertEquals(FastCommand.SetLanguage("ta"), p("tamil mode"))
+        assertEquals(FastCommand.SetLanguage("ta"), p("listen in tamil"))
         assertEquals(FastCommand.SetLanguage("en"), p("english mode"))
-        assertNull(p("hindi"))
+        assertNull(p("tamil"))
     }
 
     @Test fun playingOnYouTube() {
         assertEquals(FastCommand.PlayYouTube("despacito"), p("open YouTube and play Despacito"))
         assertEquals(FastCommand.PlayYouTube("lofi music"), p("play lofi music on youtube"))
-        assertEquals(FastCommand.PlayYouTube("arijit singh songs"), p("youtube par arijit singh songs chalao"))
-        assertEquals(FastCommand.PlayYouTube("kesariya"), p("kesariya youtube par bajao"))
+        assertEquals(FastCommand.PlayYouTube("anirudh songs"), p("youtube la anirudh songs podu"))
+        assertEquals(FastCommand.PlayYouTube("vikram"), p("vikram youtube la podu"))
         assertEquals(FastCommand.WebSearch("cats", "youtube"), p("search cats on youtube"))
         assertEquals(FastCommand.OpenApp("youtube"), p("open youtube"))
         assertNull(p("open youtube and play the first video that you see in the list of recommended items"))
@@ -166,9 +175,9 @@ class FastCommandRouterTest {
     @Test fun callingByName() {
         assertEquals(FastCommand.CallContact("mom"), p("call mom"))
         assertEquals(FastCommand.CallContact("rahul sharma"), p("Hey Jarvis, call Rahul Sharma"))
-        assertEquals(FastCommand.CallContact("rahul"), p("rahul ko call karo"))
-        assertEquals(FastCommand.CallContact("mummy"), p("mummy ko phone lagao"))
-        assertEquals(FastCommand.CallContact("प्रिया"), p("प्रिया को कॉल करो"))
+        assertEquals(FastCommand.CallContact("rahul"), p("rahul ku call pannu"))
+        assertEquals(FastCommand.CallContact("mummy"), p("mummy ku call pannu"))
+        assertEquals(FastCommand.CallContact("பிரியா"), p("பிரியா ku call pannu"))
         assertEquals(FastCommand.Dial("9876543210"), p("call 9876543210"))
         assertNull(p("call me a taxi"))
         assertNull(p("call back"))

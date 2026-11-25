@@ -99,6 +99,7 @@
     <string name="mode_online">Online</string>
     <string name="mode_offline">Offline</string>
     <string name="lang_en">English · offline</string>
+    <string name="lang_ta">தமிழ் · Google</string>
     <string name="runtime_unsupported">This build has no on-device runtime. The model in Termux or your cloud models are used instead.</string>
     <string name="runtime_downloading_percent">Downloading the on-device model: %1$d%% (%2$s)</string>
     <string name="runtime_downloading">Downloading the on-device model… (%1$s)</string>
@@ -117,6 +118,7 @@
     <string name="mode_online_hint">Cloud models first, the on-phone model if the internet is down.</string>
     <string name="mode_offline_hint">Only the on-phone model answers. Nothing leaves your phone.</string>
     <string name="lang_en_hint">Offline recognition on your phone. English only.</string>
+    <string name="lang_ta_hint">Google speech recognition for Tamil and Tanglish. Spoken replies in Tamil.</string>
     <string name="models_title">Models</string>
     <string name="models_intro">Buddy AI uses your active model. Tap a model to edit it or activate it.</string>
     <string name="no_models">No models yet</string>

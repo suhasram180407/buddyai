@@ -39,6 +39,13 @@ class Speaker(context: Context) {
         get() = if (cloudConfig() != null || settings.voiceEngine in CLOUD_VOICES.map { it.id }) cloud.lastError else Kokoro.lastError
 
     fun speak(text: String, onDone: () -> Unit = {}) {
+        val hasTamil = text.any { it in '\u0B80'..'\u0BFF' }
+        if (hasTamil) {
+            usedSystem = true
+            measurable = false
+            system.speak(text, onDone)
+            return
+        }
         val config = cloudConfig()
         if (config != null) {
             usedCloud = true

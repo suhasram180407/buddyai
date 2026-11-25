@@ -12,28 +12,28 @@ data class ContactMatch(val matches: List<ContactEntry>, val how: String = "") {
     val ambiguous: Boolean get() = matches.size > 1
 }
 
-/** Turns Devanagari names into rough Roman spellings ("राहुल" -> "rahul") so they can be compared with contacts saved in English. */
+/** Turns Tamil script names into rough Roman spellings ("ராகுல்" -> "rahul", "அம்மா" -> "amma") so they can be compared with contacts saved in English. */
 object Translit {
     private val CONSONANTS = mapOf(
-        'क' to "k", 'ख' to "kh", 'ग' to "g", 'घ' to "gh", 'ङ' to "n", 'च' to "ch", 'छ' to "chh", 'ज' to "j", 'झ' to "jh", 'ञ' to "n",
-        'ट' to "t", 'ठ' to "th", 'ड' to "d", 'ढ' to "dh", 'ण' to "n", 'त' to "t", 'थ' to "th", 'द' to "d", 'ध' to "dh", 'न' to "n",
-        'प' to "p", 'फ' to "f", 'ब' to "b", 'भ' to "bh", 'म' to "m", 'य' to "y", 'र' to "r", 'ल' to "l", 'व' to "v", 'श' to "sh",
-        'ष' to "sh", 'स' to "s", 'ह' to "h",
+        'க' to "k", 'ங' to "ng", 'ச' to "ch", 'ஞ' to "nj", 'ட' to "t", 'ண' to "n",
+        'த' to "th", 'ந' to "n", 'ப' to "p", 'ம' to "m", 'ய' to "y", 'ர' to "r",
+        'ல' to "l", 'வ' to "v", 'ழ' to "zh", 'ள' to "l", 'ற' to "r", 'ன' to "n",
+        'ஜ' to "j", 'ஷ' to "sh", 'ஸ' to "s", 'ஹ' to "h"
     )
     private val MATRAS = mapOf(
-        'ा' to "a", 'ि' to "i", 'ी' to "i", 'ु' to "u", 'ू' to "u", 'े' to "e", 'ै' to "ai", 'ो' to "o", 'ौ' to "au",
-        'ृ' to "ri", 'ॅ' to "e", 'ॉ' to "o", 'ं' to "n", 'ँ' to "n", 'ः' to "h",
+        'ா' to "a", 'ி' to "i", 'ீ' to "i", 'ு' to "u", 'ூ' to "u", 'ெ' to "e",
+        'ே' to "e", 'ை' to "ai", 'ொ' to "o", 'ோ' to "o", 'ௌ' to "au"
     )
     private val VOWELS = mapOf(
-        'अ' to "a", 'आ' to "a", 'इ' to "i", 'ई' to "i", 'उ' to "u", 'ऊ' to "u", 'ए' to "e", 'ऐ' to "ai", 'ओ' to "o", 'औ' to "au", 'ऋ' to "ri",
+        'அ' to "a", 'ஆ' to "a", 'இ' to "i", 'ஈ' to "i", 'உ' to "u", 'ஊ' to "u",
+        'எ' to "e", 'ஏ' to "e", 'ஐ' to "ai", 'ஒ' to "o", 'ஓ' to "o", 'ஔ' to "au"
     )
-    private const val VIRAMA = '्'
-    private const val NUKTA = '़'
+    private const val VIRAMA = '்'
 
-    fun hasDevanagari(s: String) = s.any { it in '\u0900'..'\u097F' }
+    fun hasTamil(s: String) = s.any { it in '\u0B80'..'\u0BFF' }
 
     fun toRoman(text: String): String {
-        val src = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFC).replace("$NUKTA", "")
+        val src = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFC)
         val out = StringBuilder()
         var i = 0
         while (i < src.length) {
@@ -43,12 +43,11 @@ object Translit {
                 cons != null -> {
                     out.append(cons)
                     val next = src.getOrNull(i + 1)
-                    val endOfWord = next == null || !(next in '\u0900'..'\u097F')
+                    val endOfWord = next == null || !(next in '\u0B80'..'\u0BFF')
                     val followedByMatraOrVirama = next != null && (MATRAS.containsKey(next) || next == VIRAMA)
-                    if (next == VIRAMA) i++ // consonant cluster: no vowel
+                    if (next == VIRAMA) i++ // consonant cluster: pulli, no inherent vowel
                     else if (!followedByMatraOrVirama && !endOfWord) out.append('a')
                 }
-                (c == 'ं' || c == 'ँ') && (src.getOrNull(i + 1)?.let { it !in '\u0900'..'\u097F' } ?: true) -> Unit
                 MATRAS.containsKey(c) -> out.append(MATRAS[c])
                 VOWELS.containsKey(c) -> out.append(VOWELS[c])
                 c == VIRAMA -> Unit
@@ -62,21 +61,21 @@ object Translit {
 
 /** Finds the contact a spoken name means. Pure logic, unit-tested. Never guesses between two equally good matches. */
 object ContactMatcher {
-    /** Words people use for family members; each row is one person, so "mom" finds a contact saved as "Mummy". */
+    /** Words people use for family members; each row is one person, so "mom" or "amma" finds a contact saved as "Mummy". */
     private val KIN = listOf(
-        setOf("mom", "mother", "mummy", "mama", "maa", "ma", "mum", "ammi", "amma", "mommy", "mammi", "mummi", "mumma", "mamma"),
-        setOf("dad", "father", "papa", "pappa", "daddy", "abbu", "baba", "pa"),
-        setOf("brother", "bhai", "bhaiya", "bro", "bhaijaan"),
-        setOf("sister", "didi", "behen", "bhen", "sis", "baji"),
-        setOf("wife", "biwi", "patni"),
-        setOf("husband", "pati"),
-        setOf("grandmother", "nani", "dadi", "granny", "grandma"),
-        setOf("grandfather", "nana", "dada", "grandpa"),
+        setOf("mom", "mother", "mummy", "mama", "mum", "amma", "thaai", "ammachi", "mommy"),
+        setOf("dad", "father", "papa", "pappa", "daddy", "pa", "appa", "thanthai"),
+        setOf("brother", "bro", "anna", "annachi", "thambi"),
+        setOf("sister", "sis", "akka", "thangachi", "thangai"),
+        setOf("wife", "manaivi", "pondatti", "samsaram"),
+        setOf("husband", "kanavan", "veetukaarar"),
+        setOf("grandmother", "grandma", "granny", "paati", "ammamma", "appaatha"),
+        setOf("grandfather", "grandpa", "thaatha", "thatha"),
     )
-    private val TITLES = setOf("mr", "mrs", "ms", "dr", "sir", "madam", "ji", "uncle", "aunty", "auntie", "shri", "the")
+    private val TITLES = setOf("mr", "mrs", "ms", "dr", "sir", "madam", "avargal", "thiru", "thirumathi", "the")
 
     fun normalizeName(raw: String): String {
-        val roman = if (Translit.hasDevanagari(raw)) Translit.toRoman(raw) else raw
+        val roman = if (Translit.hasTamil(raw)) Translit.toRoman(raw) else raw
         return roman.lowercase().replace(Regex("[^\\p{L}\\p{N}]+"), " ").trim()
     }
 
@@ -97,7 +96,6 @@ object ContactMatcher {
         }
 
         tier("exact") { _, full -> full == q || full.replace(" ", "") == qc }?.let { return it }
-        // every word the user said is one of the contact's words ("rahul" finds "Rahul Sharma"; "rahul sharma" needs both)
         tier("words") { t, _ -> qTokens.all { w -> w in t } }?.let { return it }
         tier("kin") { t, _ -> qTokens.size == 1 && kinGroup(qTokens[0])?.let { g -> t.any { it in g } } == true }?.let { return it }
         if (qc.length >= 3) tier("prefix") { t, _ -> qTokens.all { w -> t.any { it.startsWith(w) } } }?.let { return it }
@@ -114,7 +112,11 @@ object ContactMatcher {
     fun pick(answer: String, candidates: List<ContactEntry>): ContactEntry? {
         val a = tokens(answer)
         if (a.isEmpty()) return null
-        val ordinal = mapOf("first" to 0, "pehla" to 0, "pehle" to 0, "1" to 0, "one" to 0, "second" to 1, "doosra" to 1, "dusra" to 1, "2" to 1, "two" to 1, "third" to 2, "teesra" to 2, "3" to 2, "three" to 2)
+        val ordinal = mapOf(
+            "first" to 0, "1" to 0, "one" to 0, "mudhal" to 0, "modhal" to 0, "onnu" to 0,
+            "second" to 1, "2" to 1, "two" to 1, "irandavathu" to 1, "rendavathu" to 1, "rendu" to 1,
+            "third" to 2, "3" to 2, "three" to 2, "moondravathu" to 2, "moonu" to 2
+        )
         a.firstNotNullOfOrNull { ordinal[it] }?.let { idx -> candidates.getOrNull(idx)?.let { return it } }
         val hits = candidates.filter { c -> val t = tokens(c.name); a.any { w -> w in t || t.any { it.startsWith(w) && w.length >= 3 } } }
         if (hits.size == 1) return hits.single()

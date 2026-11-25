@@ -42,12 +42,17 @@ object AssistantSection {
         val langChips = view.findViewById<ChipGroup>(R.id.speechLangChips)
         val langHint = view.findViewById<TextView>(R.id.speechLangHint)
         langChips.addChoice(context.getString(R.string.lang_en), "en")
-        langChips.select("en")
-        settings.speechLanguage = "en"
-        langHint.setText(langText("en"))
-        langChips.visibility = View.GONE
-        langHint.visibility = View.GONE
-        view.findViewById<View>(R.id.speechLangTitle)?.visibility = View.GONE
+        langChips.addChoice(context.getString(R.string.lang_ta), "ta")
+        langChips.select(if (settings.speechLanguage == "ta") "ta" else "en")
+        langHint.setText(langText(settings.speechLanguage))
+        langChips.visibility = View.VISIBLE
+        langHint.visibility = View.VISIBLE
+        view.findViewById<View>(R.id.speechLangTitle)?.visibility = View.VISIBLE
+        langChips.setOnCheckedStateChangeListener { _, _ ->
+            val lang = if (langChips.selectedTag == "ta") "ta" else "en"
+            settings.speechLanguage = lang
+            langHint.setText(langText(lang))
+        }
 
         view.findViewById<MaterialSwitch>(R.id.confirmSwitch).apply {
             isChecked = settings.confirmSensitive
@@ -149,5 +154,5 @@ object AssistantSection {
         AiMode.OFFLINE -> R.string.mode_offline_hint
     }
 
-    private fun langText(lang: String) = R.string.lang_en_hint
+    private fun langText(lang: String) = if (lang == "ta") R.string.lang_ta_hint else R.string.lang_en_hint
 }

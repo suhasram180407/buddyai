@@ -30,7 +30,7 @@ class ContactMatcherTest {
 
     @Test fun familyWordsFindTheRightContact() {
         assertEquals(listOf(mummy), ContactMatcher.find("mom", all).matches)
-        assertEquals(listOf(mummy), ContactMatcher.find("maa", all).matches)
+        assertEquals(listOf(mummy), ContactMatcher.find("amma", all).matches)
         assertEquals(listOf(mummy), ContactMatcher.find("mummy", all).matches)
     }
 
@@ -46,13 +46,13 @@ class ContactMatcherTest {
         assertTrue(ContactMatcher.find("rahul", emptyList()).matches.isEmpty())
     }
 
-    @Test fun devanagariNamesMatchContactsSavedInEnglish() {
-        assertEquals("rahul", Translit.toRoman("राहुल"))
-        assertEquals("priya", Translit.toRoman("प्रिया"))
-        assertEquals("sonu", Translit.toRoman("सोनू"))
-        assertEquals(listOf(priya), ContactMatcher.find("प्रिया", all).matches)
-        assertEquals(listOf(mummy), ContactMatcher.find("मम्मी", all).matches)
-        assertTrue(ContactMatcher.find("राहुल", all).ambiguous)
+    @Test fun tamilNamesMatchContactsSavedInEnglish() {
+        assertEquals("rakul", Translit.toRoman("ராகுல்"))
+        assertEquals("rahul", Translit.toRoman("ராஹுல்"))
+        assertEquals("piriya", Translit.toRoman("பிரியா"))
+        assertEquals(listOf(priya), ContactMatcher.find("பிரியா", all).matches)
+        assertEquals(listOf(mummy), ContactMatcher.find("அம்மா", all).matches)
+        assertTrue(ContactMatcher.find("ராகுல்", all).ambiguous)
     }
 
     @Test fun answeringAWhichOneQuestion() {

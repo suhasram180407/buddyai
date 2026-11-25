@@ -27,8 +27,11 @@ class FastCommandRouterTest {
         val onResult = FastCommandRouter.execute(context, "turn on the flashlight")
         assertTrue("turn on flashlight should be handled", onResult.handled)
 
-        val offResult = FastCommandRouter.execute(context, "torch off karo")
-        assertTrue("torch off karo should be handled", offResult.handled)
+        val onTamil = FastCommandRouter.execute(context, "டார்ச் லைட் ஆன் பண்ணு")
+        assertTrue("Tamil torch light on should be handled", onTamil.handled)
+
+        val offResult = FastCommandRouter.execute(context, "torch light off pannu")
+        assertTrue("torch light off pannu should be handled", offResult.handled)
     }
 
     @Test
@@ -36,8 +39,11 @@ class FastCommandRouterTest {
         val up = FastCommandRouter.execute(context, "volume up")
         assertTrue("volume up should be handled", up.handled)
 
-        val downHindi = FastCommandRouter.execute(context, "aawaz kam karo")
-        assertTrue("aawaz kam karo should be handled", downHindi.handled)
+        val downTanglish = FastCommandRouter.execute(context, "volume kammi pannu")
+        assertTrue("volume kammi pannu should be handled", downTanglish.handled)
+
+        val percentTamil = FastCommandRouter.execute(context, "Volume ah 70 percent ku set pannu")
+        assertTrue("volume 70 percent should be handled", percentTamil.handled)
 
         val mute = FastCommandRouter.execute(context, "mute")
         assertTrue("mute should be handled", mute.handled)
@@ -45,8 +51,8 @@ class FastCommandRouterTest {
 
     @Test
     fun matchesMediaCommands() {
-        val play = FastCommandRouter.execute(context, "gana bajao")
-        assertTrue("gana bajao should be handled", play.handled)
+        val play = FastCommandRouter.execute(context, "paattu podu")
+        assertTrue("paattu podu should be handled", play.handled)
 
         val pause = FastCommandRouter.execute(context, "pause music")
         assertTrue("pause music should be handled", pause.handled)
@@ -76,8 +82,11 @@ class FastCommandRouterTest {
         val yt = FastCommandRouter.execute(context, "open YouTube")
         assertTrue("open YouTube should be handled", yt.handled)
 
-        val ytHindi = FastCommandRouter.execute(context, "YouTube kholo")
-        assertTrue("YouTube kholo should be handled", ytHindi.handled)
+        val ytTanglish = FastCommandRouter.execute(context, "YouTube open pannu")
+        assertTrue("YouTube open pannu should be handled", ytTanglish.handled)
+
+        val ytTamil = FastCommandRouter.execute(context, "யூடியூப் திற")
+        assertTrue("யூடியூப் திற should be handled", ytTamil.handled)
 
         val directYt = FastCommandRouter.execute(context, "YouTube")
         assertTrue("direct YouTube should be handled", directYt.handled)

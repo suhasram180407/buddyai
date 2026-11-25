@@ -392,10 +392,10 @@ class JarvisService : Service() {
     /** What Jarvis says when woken and the user has not started speaking: the day's first greeting, otherwise "Yes?". */
     private fun wakePrompt(): String = greeting.takeGreeting() ?: "Yes?"
 
-    /** Offline English recognition. */
-    private val useOfflineAsr get() = voice.canTranscribe
+    /** Offline English recognition when English mode is selected. */
+    private val useOfflineAsr get() = settings.speechLanguage == "en" && voice.canTranscribe
 
-    private fun googleLanguage(): String? = null
+    private fun googleLanguage(): String? = if (settings.speechLanguage == "ta") "ta-IN" else null
 
     private fun onHeard(text: String?, followUp: Boolean = false, interrupted: Boolean = false) {
         if (state != State.LISTENING_COMMAND) return

@@ -17,28 +17,28 @@ object MemoryIntentParser {
         """^["“']?(.+?)["”']?\s+(?:means|mean|refers to|is another name for|stands for)\s+(?:the\s+)?["“']?(.+?)["”']?\s+app[.!]?$""",
         OPT,
     )
-    private val TEACH_HI = Regex(
-        """^(?:jab main|jab maine|agar main|jab)\s+(.+?)\s+(?:bolun|bolu|bolta hoon|bolta hu|kahun|kahu|bole|bolo|kahoon)""" +
-            """(?:\s+to|\s+tab)?\s+(?:to\s+)?(.+?)\s+(?:kholo|khol do|khol dena|khol de|open karo|chalao|chalana)[.!]?$""",
+    private val TEACH_TA = Regex(
+        """^(?:naan|na)\s+(.+?)\s+(?:nu sonna|nu sollumpodhu|sollumbothu|sonna)""" +
+            """(?:\s+appo)?\s+(.+?)\s+(?:open pannu|thira|launch pannu)[.!]?$""",
         OPT,
     )
     private val PHRASE_EN = Regex("""^(?:when|if|whenever) i (?:say|said) ["“']?(.+?)["”']?,?\s+(?:i|what i) mean(?:t)?\s+["“']?(.+?)["”']?[.!]?$""", OPT)
-    private val PHRASE_HI = Regex("""^(?:jab main|jab maine|jab)\s+(.+?)\s+(?:bolun|bolu|bolta hoon|bolta hu|kahun|kahu)(?:\s+to)?\s+mera matlab\s+(.+?)\s+(?:hota hai|hai|hota)[.!]?$""", OPT)
-    private val TEACH_HI_MATLAB = Regex("""^(.+?)\s+ka matlab\s+(.+?)\s+(?:app\s+)?hai[.!]?$""", OPT)
+    private val PHRASE_TA = Regex("""^(?:naan|na)\s+(.+?)\s+(?:nu sonna|nu sollumpodhu)\s+enakku\s+(.+?)\s+(?:nu artham|artham)[.!]?$""", OPT)
+    private val TEACH_TA_ARTHAM = Regex("""^(.+?)\s+na\s+(.+?)\s+(?:app\s+)?nu artham[.!]?$""", OPT)
 
     private val REMEMBER = Regex("""^(?:please\s+)?(?:remember|note|keep in mind|don't forget|dont forget)(?:\s+that)?[,:]?\s+(.+)$""", OPT)
-    private val REMEMBER_HI = Regex("""^(?:yaad rakho|yaad rakhna|yaad kar lo|yaad rakh lo)(?:\s+ki)?[,:]?\s+(.+)$""", OPT)
+    private val REMEMBER_TA = Regex("""^(?:yaabagam vechuko|nyabagam vechuko|gnabagam vechuko|ஞாபகம் வச்சுக்கோ)(?:\s+nu)?[,:]?\s+(.+)$""", OPT)
     private val FORGET = Regex("""^(?:please\s+)?(?:forget|delete|remove|erase)(?:\s+the)?(?:\s+(?:memory|memories|note))?(?:\s+(?:about|that|of))?\s+(.+)$""", OPT)
-    private val FORGET_HI = Regex("""^(?:bhool jao|bhool ja|mita do|hata do)\s+(.+)$""", OPT)
+    private val FORGET_TA = Regex("""^(?:maranthudu|maranthidu|delete pannu|remove pannu)\s+(.+)$""", OPT)
     private val LIST = Regex(
         """^(?:what do you (?:remember|know about me)|what all do you remember|show (?:me )?(?:my |your )?memor(?:y|ies)|""" +
-            """list (?:my )?memories|tum kya yaad rakhte ho|meri memory dikhao|kya kya yaad hai)[?.!]?$""",
+            """list (?:my )?memories|en memories ah kaattu|en memories enna)[?.!]?$""",
         OPT,
     )
-    private val STYLE_TOPIC = Regex("""\b(short|brief|concise|detailed|long answers?|hindi|hinglish|english|formal|casual|simple|one line)\b""", OPT)
-    private val STYLE_CUE = Regex("""\b(prefer|like|want|answers?|repl(?:y|ies)|respond|speak|talk|pasand|chahiye|bolo)\b""", OPT)
+    private val STYLE_TOPIC = Regex("""\b(short|brief|concise|detailed|long answers?|tamil|tanglish|english|formal|casual|simple|one line)\b""", OPT)
+    private val STYLE_CUE = Regex("""\b(prefer|like|want|answers?|repl(?:y|ies)|respond|speak|talk|pidikkum|venum|pesu)\b""", OPT)
     private val FORGET_VAGUE = setOf("it", "that", "this", "everything", "all", "anything")
-    private val EMPTY_FACTS = setOf("that", "this", "it", "me", "ki", "to")
+    private val EMPTY_FACTS = setOf("that", "this", "it", "me", "nu", "to")
 
     private const val MAX_FACT = 200
 
@@ -47,9 +47,9 @@ object MemoryIntentParser {
         if (s.isEmpty()) return null
         teach(s)?.let { return it }
         FORGET.matchEntire(s)?.groupValues?.get(1)?.let { return forget(it) }
-        FORGET_HI.matchEntire(s)?.groupValues?.get(1)?.let { return forget(it) }
+        FORGET_TA.matchEntire(s)?.groupValues?.get(1)?.let { return forget(it) }
         if (LIST.matches(s)) return MemoryIntent.ListAll
-        val fact = (REMEMBER.matchEntire(s) ?: REMEMBER_HI.matchEntire(s))?.groupValues?.get(1)?.trim() ?: return null
+        val fact = (REMEMBER.matchEntire(s) ?: REMEMBER_TA.matchEntire(s))?.groupValues?.get(1)?.trim() ?: return null
         teach(fact)?.let { return it }
         val text = fact.replace(Regex("\\s+"), " ").trimEnd('.', '!', ' ')
         if (text.length < 3 || text.lowercase() in EMPTY_FACTS) return null
@@ -58,13 +58,13 @@ object MemoryIntentParser {
     }
 
     private fun teach(s: String): MemoryIntent? {
-        (PHRASE_EN.matchEntire(s) ?: PHRASE_HI.matchEntire(s))?.let { p ->
+        (PHRASE_EN.matchEntire(s) ?: PHRASE_TA.matchEntire(s))?.let { p ->
             val phrase = clean(p.groupValues[1]); val meaning = clean(p.groupValues[2])
             if (phrase.isNotEmpty() && meaning.isNotEmpty() && phrase.split(' ').size <= 4 && meaning.split(' ').size <= 6) {
                 return MemoryIntent.TeachPhrase(phrase, meaning)
             }
         }
-        val m = TEACH_WHEN.matchEntire(s) ?: TEACH_MEANS.matchEntire(s) ?: TEACH_HI.matchEntire(s) ?: TEACH_HI_MATLAB.matchEntire(s)
+        val m = TEACH_WHEN.matchEntire(s) ?: TEACH_MEANS.matchEntire(s) ?: TEACH_TA.matchEntire(s) ?: TEACH_TA_ARTHAM.matchEntire(s)
             ?: return null
         val phrase = clean(m.groupValues[1])
         val target = clean(m.groupValues[2])

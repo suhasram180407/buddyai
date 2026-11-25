@@ -27,7 +27,7 @@ class SentenceChunker(private val minLength: Int = 24, private val maxLength: In
         return piece.ifEmpty { null }
     }
 
-    private fun isEnd(c: Char) = c == '.' || c == '!' || c == '?' || c == '।' || c == '\n'
+    private fun isEnd(c: Char) = c == '.' || c == '!' || c == '?' || c == '\n'
 
     private fun nextCut(): Int? {
         // a sentence end followed by whitespace (so "3.5" and "e.g." are not cut), once the piece is long enough

@@ -44,6 +44,12 @@ class SystemVoice(context: Context) : VoiceEngine {
         main.post {
             if (!initDone) { queued += text to onDone; return@post }
             if (!ready) { onDone(); return@post }
+            val hasTamil = text.any { it in '\u0B80'..'\u0BFF' }
+            if (hasTamil) {
+                tts.language = java.util.Locale("ta", "IN")
+            } else {
+                tts.language = java.util.Locale.US
+            }
             val id = UUID.randomUUID().toString()
             pending[id] = onDone
             tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, id)

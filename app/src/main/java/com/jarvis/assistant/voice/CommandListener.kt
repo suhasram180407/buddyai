@@ -18,8 +18,8 @@ class CommandListener(private val context: Context) {
     fun listen(onResult: (String?) -> Unit) = listen(null, onResult)
 
     /**
-     * [language] is a BCP-47 tag such as "hi-IN". Google's Hindi recognizer also understands Hinglish (English words
-     * inside Hindi sentences) and may answer in Devanagari or Roman letters; the command router accepts both.
+     * [language] is a BCP-47 tag such as "ta-IN". The recognizer understands Tamil and Tanglish
+     * and may answer in Tamil script or Roman letters; the command router accepts both.
      */
     fun listen(language: String?, onResult: (String?) -> Unit) {
         cancel()

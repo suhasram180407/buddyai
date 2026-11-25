@@ -3,58 +3,58 @@ package com.jarvis.assistant.router
 import com.jarvis.assistant.ai.AiMode
 
 /**
- * The fast path: recognises simple phone commands in English, Hinglish and Devanagari Hindi so they run in
+ * The fast path: recognises simple phone commands in English, Tanglish and Tamil script so they run in
  * milliseconds without a language model. Anything it does not recognise returns null and goes to the model as before.
  */
 object FastCommandRouter {
     private const val MAX_WORDS = 12
 
-    private val MODE = Regex("""^(?:go |switch to |switch |use |set |turn on )?(offline|online|auto|automatic)(?: mode)?(?: on| karo| kar do| kar de| chalu karo)?$""")
-    private val LANG = Regex("""^(?:please )?(?:(?:speak|listen|talk|understand|reply|bolo|suno|samjho)(?: to me)?(?: in| me| mein)? )?(hindi|hinglish|english)(?: mode)?(?: me| mein| on| karo| kar do| suno| samjho| bolo)*$""")
+    private val MODE = Regex("""^(?:go |switch to |switch |use |set |turn on )?(offline|online|auto|automatic)(?: mode)?(?: on| pannu)?$""")
+    private val LANG = Regex("""^(?:please )?(?:(?:speak|listen|talk|understand|reply|pesu|kelu|sol)(?: to me)?(?: in| la)? )?(tamil|tanglish|english)(?: mode)?(?: la| on| pannu| pesu| kelu)*$""")
 
-    private val BACK = Regex("""^(?:go |press |navigate |take me )?back(?: button| karo| kar do| jao| chalo| ja)?$|^(?:peeche|piche|wapas|vapas)(?: jao| ja| chalo| karo| kar do)?$""")
-    private val HOME = Regex("""^(?:go |press |take me |navigate |show )?(?:to )?(?:the )?home(?: screen| button| page)?(?: par| pe)?(?: jao| ja| chalo| karo| kar do| dikhao)?$""")
-    private val RECENTS = Regex("""^(?:open |show |go to )?(?:the )?(?:recent apps?|recents?|app switcher)(?: kholo| dikhao| karo)?$""")
-    private val NOTIFICATIONS = Regex("""^(?:open |show |pull down |check )?(?:the )?(?:my )?notifications?(?: panel| shade| bar| drawer)?(?: kholo| dikhao| dikha do| karo)?$""")
-    private val QUICK_SETTINGS = Regex("""^(?:open |show |pull down )?(?:the )?quick settings?(?: panel)?(?: kholo| dikhao)?$""")
-    private val SCREENSHOT = Regex("""^(?:take |capture |grab )?(?:a )?(?:screenshot|screen shot|screen capture)(?: lo| le| karo| kar do| lena)?$""")
-    private val LOCK = Regex("""^lock(?: the)?(?: phone| screen| device| mobile)?(?: karo| kar do)?$|^(?:phone|screen) lock(?: karo| kar do)?$""")
+    private val BACK = Regex("""^(?:go |press |navigate |take me )?back(?: button| pannu| po| ponga)?$|^(?:pinnaadi|pinnadi|pinadi|back)(?: po| ponga| pannu)?$""")
+    private val HOME = Regex("""^(?:go |press |take me |navigate |show )?(?:to )?(?:the )?home(?: screen| button| page)?(?: ku)?(?: po| ponga| pannu| kaattu)?$""")
+    private val RECENTS = Regex("""^(?:open |show |go to )?(?:the )?(?:recent apps?|recents?|app switcher)(?: open pannu| thira| kaattu| pannu)?$""")
+    private val NOTIFICATIONS = Regex("""^(?:open |show |pull down |check )?(?:the )?(?:my )?notifications?(?: panel| shade| bar| drawer)?(?: open pannu| thira| kaattu| pannu)?$""")
+    private val QUICK_SETTINGS = Regex("""^(?:open |show |pull down )?(?:the )?quick settings?(?: panel)?(?: open pannu| thira| kaattu)?$""")
+    private val SCREENSHOT = Regex("""^(?:take |capture |grab )?(?:a )?(?:screenshot|screen shot|screen capture)(?: edu| edunga| pannu| podu)?$""")
+    private val LOCK = Regex("""^lock(?: the)?(?: phone| screen| device| mobile)?(?: pannu)?$|^(?:phone|screen) lock(?: pannu)?$""")
 
-    private val SCROLL_OK = setOf("scroll", "swipe", "down", "up", "left", "right", "neeche", "niche", "upar", "oopar", "karo", "kar", "do", "the", "page", "screen", "a", "little", "bit", "thoda", "aur", "more", "ko")
+    private val SCROLL_OK = setOf("scroll", "swipe", "down", "up", "left", "right", "keezhe", "kizhe", "mele", "mela", "pannu", "the", "page", "screen", "a", "little", "bit", "konjam", "innum", "more", "ah")
 
-    private val VOLUME_WORDS = setOf("volume", "awaaz", "sound", "aawaz", "awaz")
-    private val UP_WORDS = setOf("up", "increase", "raise", "louder", "higher", "badhao", "badha", "zyada", "jyada", "full", "max", "maximum")
-    private val DOWN_WORDS = setOf("down", "decrease", "lower", "reduce", "quieter", "softer", "kam", "ghatao", "ghata", "low", "min", "minimum")
+    private val VOLUME_WORDS = setOf("volume", "satham", "sound", "sathatha", "oliyai", "oli")
+    private val UP_WORDS = setOf("up", "increase", "raise", "louder", "higher", "aethu", "yaethu", "ethu", "kootu", "adhigam", "athigam", "full", "max", "maximum", "perusu")
+    private val DOWN_WORDS = setOf("down", "decrease", "lower", "reduce", "quieter", "softer", "korai", "kurai", "kammi", "chinna", "low", "min", "minimum")
 
-    private val TORCH_WORDS = setOf("flashlight", "torch", "flash", "tourch", "tarch", "flashlite", "light")
-    private val ON_WORDS = setOf("on", "enable", "jalao", "jala", "chalu", "start", "shuru", "laga", "lagao", "activate")
-    private val OFF_WORDS = setOf("off", "disable", "band", "bujhao", "bujha", "stop", "shut", "deactivate")
+    private val TORCH_WORDS = setOf("flashlight", "torch", "flash", "tourch", "tarch", "flashlite", "light", "velakku", "vilakku")
+    private val ON_WORDS = setOf("on", "enable", "podu", "start", "shuru", "activate")
+    private val OFF_WORDS = setOf("off", "disable", "moodu", "niruthu", "stop", "shut", "deactivate", "anai")
 
-    private val MUSIC_WORDS = setOf("music", "song", "songs", "gaana", "gana", "gaane", "audio", "track", "tune")
-    private val MEDIA_FILLER = setOf("the", "some", "my", "karo", "kar", "do", "de", "ek", "ko")
-    private val PLAY_WORDS = setOf("play", "resume", "start", "bajao", "baja", "chalao", "chala", "laga", "lagao", "shuru")
-    private val PAUSE_WORDS = setOf("pause", "stop", "roko", "ruko", "band", "rok")
-    private val NEXT_WORDS = setOf("next", "skip", "agla", "agle", "aage")
-    private val PREV_WORDS = setOf("previous", "prev", "pichla", "pichle", "pichhla", "last")
+    private val MUSIC_WORDS = setOf("music", "song", "songs", "paattu", "paatu", "paadal", "audio", "track", "tune")
+    private val MEDIA_FILLER = setOf("the", "some", "my", "pannu", "oru", "ah", "ku", "la")
+    private val PLAY_WORDS = setOf("play", "resume", "start", "podu", "paada", "vidu")
+    private val PAUSE_WORDS = setOf("pause", "stop", "niruthu", "moodu", "off")
+    private val NEXT_WORDS = setOf("next", "skip", "adutha", "nextu")
+    private val PREV_WORDS = setOf("previous", "prev", "munthaiya", "muthal", "last")
 
-    private val TIME = Regex("""^(?:what(?: s|s| is)? the time(?: now| right now)?|what time is it(?: now| right now)?|tell me the time|current time|time kya hai|time kya hua hai|time kitna hua hai|kitne baje hain?|time batao|time bata do)$""")
-    private val DATE = Regex("""^(?:what(?: s|s| is)? (?:the )?(?:date|day)(?: today| is it)?|what day is it(?: today)?|today s date|todays date|aaj (?:ki )?date(?: kya hai)?|aaj kya date hai|aaj kaun sa din hai|aaj konsa din hai|date kya hai|which day is it)$""")
-    private val BATTERY = Regex("""^(?:what(?: s|s| is)? (?:the )?battery(?: level| percentage| percent)?|how much battery(?: is left| do i have| left)?|battery (?:level|percentage|percent|status)|battery kitni (?:hai|hain|bachi hai)|battery kitna hai|battery kitne percent hai)$""")
-    private val VOLUME_QUERY = Regex("""^(?:what(?: s|s| is)? (?:the )?(?:current )?volume(?: level)?|how loud is it|volume (?:status|level|check)|tell me the volume)$""")
+    private val TIME = Regex("""^(?:what(?: s|s| is)? the time(?: now| right now)?|what time is it(?: now| right now)?|tell me the time|current time|time enna|mani enna|ippo mani enna|time sollu|mani sollu)$""")
+    private val DATE = Regex("""^(?:what(?: s|s| is)? (?:the )?(?:date|day)(?: today| is it)?|what day is it(?: today)?|today s date|todays date|inniki enna date|inniki date enna|date enna|inniki enna naal|which day is it)$""")
+    private val BATTERY = Regex("""^(?:what(?: s|s| is)? (?:the )?battery(?: level| percentage| percent)?|how much battery(?: is left| do i have| left)?|battery (?:level|percentage|percent|status)|battery evlo(?: irukku)?|battery level enna|en phone la battery evlo(?: irukku)?|battery charge evlo|charge evlo(?: irukku)?|battery ethana percent)$""")
+    private val VOLUME_QUERY = Regex("""^(?:what(?: s|s| is)? (?:the )?(?:current )?volume(?: level)?|how loud is it|volume (?:status|level|check)|tell me the volume|volume evlo(?: irukku)?|satham evlo(?: irukku)?)$""")
 
     private val MEDIA_COUNT = Regex("""^(?:count|how many) (videos?|photos?|images?|pictures?)(?: do i have| are there)?$""")
     private val FILE_LIST = Regex("""^(?:list|show|get)(?: all)? (?:my )?files$""")
     private val FILE_FIND = Regex("""^(?:find|search|locate)(?: the)? file (.+)$""")
-    private val FILE_READ = Regex("""^(?:read|open|show|cat)(?: the)? file (.+)$""")
+    private val FILE_READ = Regex("""^(?:read|open|show|cat)(?: the)? file (.+)$|^(?:indha )?file(?: ah)? (?:open|read|kaattu|thira)(?: pannu)?(?: (.+))?$""")
     private val FILE_CREATE = Regex("""^(?:create|write|make|new)(?: file)? (.+?) with (.+)$""")
 
-    private val DURATION = Regex("""(\d+)\s*(seconds?|secs?|minutes?|mins?|minat|hours?|hrs?|ghanta|ghante|ghantey)""")
-    private val CLOCK = Regex("""\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|baje|bje)?(?=\s|$)""")
-    private val DIAL_A = Regex("""^(?:call|dial|phone)\s+(\+?[\d\s]{6,18})(?: karo| kar do)?$""")
-    private val DIAL_B = Regex("""^(\+?[\d\s]{6,18}) ko (?:call|phone|dial)(?: karo| kar do)?$""")
+    private val DURATION = Regex("""(\d+)\s*(seconds?|secs?|minutes?|mins?|nimisham|nimudam|hours?|hrs?)""")
+    private val CLOCK = Regex("""\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|mani)?(?=\s|$)""")
+    private val DIAL_A = Regex("""^(?:call|dial|phone)\s+(\+?[\d\s]{6,18})(?: pannu)?$""")
+    private val DIAL_B = Regex("""^(\+?[\d\s]{6,18})(?: ku)? (?:call|phone|dial)(?: pannu)?$""")
 
     private val CALL_A = Regex("""^(?:make a call to|place a call to|give a call to|call|phone|ring|dial) (.+)$""")
-    private val CALL_B = Regex("""^(.+?) ko (?:call|phone|dial)(?: karo| kar do| lagao| laga do| kijiye| kar de)?$|^(.+?) ko (?:phone|call) (?:lagao|laga do|karo|kar do)$""")
+    private val CALL_B = Regex("""^(.+?) (?:ku )?(?:call|phone|dial)(?: pannu| podu)?$""")
     private val NOT_A_NAME = setOf("me", "him", "her", "them", "us", "back", "again", "it", "someone", "somebody", "anyone", "a", "the", "number", "now", "later")
 
     private val PAGES = linkedMapOf(
@@ -65,31 +65,31 @@ object FastCommandRouter {
         "date" to "date", "language" to "language",
     )
     private val TOGGLE_PAGES = setOf("wifi", "bluetooth", "airplane", "hotspot", "data", "location")
-    private val TOGGLE_OK = setOf("turn", "switch", "on", "off", "enable", "disable", "the", "wifi", "wi", "fi", "bluetooth", "airplane", "flight", "mode", "hotspot", "mobile", "data", "location", "gps", "karo", "kar", "do", "chalu", "band", "shuru", "kholo")
+    private val TOGGLE_OK = setOf("turn", "switch", "on", "off", "enable", "disable", "the", "wifi", "wi", "fi", "bluetooth", "airplane", "flight", "mode", "hotspot", "mobile", "data", "location", "gps", "pannu", "podu", "moodu", "thira")
 
     private val RUNTIME_DOWNLOAD = Regex("""^(?:download|install|get|set up|setup) (?:the )?(?:offline|local|on device|ondevice) (?:model|ai|brain)$""")
     private val RUNTIME_STATUS = Regex("""^(?:is )?(?:the )?(?:offline|local|on device|ondevice) (?:model|ai|brain) (?:status|running|ready|working)$|^(?:offline|local|on device|ondevice) (?:model|ai|brain) status$""")
 
-    private val CAMERA = Regex("""^(?:open |launch |start )?(?:the )?camera(?: app)?(?: kholo| open karo| chalao| chalu karo)?$""")
+    private val CAMERA = Regex("""^(?:open |launch |start |thira )?(?:the )?camera(?: app)?(?: open pannu| thira| podu| open)?$""")
 
-    private val YT_A = Regex("""^(?:open |launch |start )?youtube(?: app)? (?:and |then |aur )?(?:play|watch|chalao|bajao) (.+)$""")
-    private val YT_B = Regex("""^(?:play|watch) (.+?) (?:on|in|from) youtube$""")
-    private val YT_C = Regex("""^youtube (?:par|pe|me|mein) (.+?) (?:chalao|bajao|play karo|laga do|chala do|baja do|lagao|dikhao)$""")
-    private val YT_D = Regex("""^(.+?) youtube (?:par|pe|me|mein) (?:chalao|bajao|play karo|laga do|chala do|baja do|lagao)$|^(.+?) (?:chalao|bajao) youtube (?:par|pe|me|mein)$""")
+    private val YT_A = Regex("""^(?:open |launch |start )?youtube(?: app)? (?:and |then )?(?:play|watch|podu) (.+)$""")
+    private val YT_B = Regex("""^(?:play|watch|podu) (.+?) (?:on|in|from|la) youtube$""")
+    private val YT_C = Regex("""^youtube (?:la|in|on) (.+?) (?:podu|play pannu|kaattu)$""")
+    private val YT_D = Regex("""^(.+?) youtube (?:la|in|on) (?:podu|play pannu|kaattu)$|^(.+?) (?:podu|play pannu) youtube (?:la|in|on)$""")
 
-    private val SEARCH_PREFIX_SITE = Regex("""^(youtube|google) (?:par|pe|me|mein|on|in) (?:search )?(.+?)(?: search karo| search kar do| dhundo| dhoondo)?$""")
-    private val SEARCH_A = Regex("""^(?:search|google|look up|dhundo|dhoondo|khojo)(?: for)? (.+)$""")
-    private val SEARCH_B = Regex("""^(.+?) (?:search karo|search kar do|search kar|dhundo|dhoondo|khojo|google karo|google kar do)$""")
-    private val SEARCH_SITE = Regex("""^(.+?) (?:on|in|par|pe|me|mein) (google|youtube)(?: search)?$""")
+    private val SEARCH_PREFIX_SITE = Regex("""^(youtube|google) (?:la|on|in) (?:search )?(.+?)(?: search pannu| thedu)?$""")
+    private val SEARCH_A = Regex("""^(?:search|google|look up|thedu)(?: for)? (.+)$""")
+    private val SEARCH_B = Regex("""^(.+?) (?:search pannu|thedu|google pannu)$""")
+    private val SEARCH_SITE = Regex("""^(.+?) (?:on|in|la) (google|youtube)(?: search)?$""")
     private val IN_APP_WORDS = setOf("spotify", "amazon", "flipkart", "zomato", "swiggy", "instagram", "whatsapp", "telegram", "facebook", "twitter", "netflix", "hotstar", "gmail", "maps", "paytm", "phonepe", "uber", "ola")
 
-    private val TYPE_RAW = Regex("""^\W*(?:(?:hey|ok|okay)\s+jarvis\W*)?(?:please\s+)?type\s+(.+?)[\s.]*$""", RegexOption.IGNORE_CASE)
-    private val TAP_A = Regex("""^(?:tap|click|press|touch|select|dabao|dabana)(?: on)?(?: the)? (.{1,30}?)(?: button| option| icon| tab)?$""")
-    private val TAP_B = Regex("""^(.{1,30}?) (?:dabao|dabana|dabaiye|click karo|tap karo|press karo)$""")
+    private val TYPE_RAW = Regex("""^\W*(?:(?:hey|ok|okay)\s+(?:jarvis|buddy)\W*)?(?:please\s+)?type\s+(.+?)[\s.]*$""", RegexOption.IGNORE_CASE)
+    private val TAP_A = Regex("""^(?:tap|click|press|touch|select)(?: on)?(?: the)? (.{1,30}?)(?: button| option| icon| tab)?$""")
+    private val TAP_B = Regex("""^(.{1,30}?) (?:click pannu|tap pannu|press pannu)$""")
     private val TAP_GENERIC = setOf("it", "this", "that", "screen", "anywhere", "here", "there", "something")
 
-    private val OPEN_A = Regex("""^(?:open|launch|start|run|go to|switch to|kholo)(?: karo| up)?(?: the)? (.+?)(?: app| application| ko)?$""")
-    private val OPEN_B = Regex("""^(.+?)(?: app| application)? (?:kholo|khol do|khol de|kholna|khol dena|chalao|chala do|chalu karo|chalu kar do|open karo|open kar do|launch karo|start karo|dikhao|dikha do)$""")
+    private val OPEN_A = Regex("""^(?:open|launch|start|run|go to|switch to|thira)(?: up)?(?: the)? (.+?)(?: app| application)?$""")
+    private val OPEN_B = Regex("""^(.+?)(?: app| application)? (?:open pannu|open|thira|launch pannu|start pannu|podu)$""")
     private val OPEN_BLOCKED = setOf("it", "this", "that", "something", "anything", "a", "an", "one", "up")
 
     /** Returns the command if [raw] is a complete simple command, otherwise null. */
@@ -115,37 +115,35 @@ object FastCommandRouter {
 
     private fun followUp(t: String, lastCommand: FastCommand): FastCommand? = when (lastCommand) {
         is FastCommand.Flashlight -> when (t) {
-            "turn it off", "turn off", "turn off flashlight", "turn off torch", "turn off light", "shut it off", "switch it off", "stop", "off" ->
+            "turn it off", "turn off", "turn off flashlight", "turn off torch", "turn off light", "shut it off", "switch it off", "stop", "off",
+            "off pannu", "ippo atha off pannu", "atha off pannu", "atha anai", "light ah anai" ->
                 FastCommand.Flashlight(false)
-            "turn it on", "turn on", "turn on flashlight", "turn on torch", "turn on light", "switch it on", "start", "on" ->
+            "turn it on", "turn on", "turn on flashlight", "turn on torch", "turn on light", "switch it on", "start", "on",
+            "on pannu", "ippo atha on pannu", "atha on pannu", "light ah podu" ->
                 FastCommand.Flashlight(true)
             else -> null
         }
         is FastCommand.Media -> when (t) {
-            "turn it off", "stop", "pause it", "pause", "stop it" ->
+            "turn it off", "stop", "pause it", "pause", "stop it", "niruthu", "off pannu", "paatta niruthu" ->
                 FastCommand.Media(MediaAction.PAUSE)
-            "play", "resume", "continue", "start" ->
+            "play", "resume", "continue", "start", "podu", "paada vidu" ->
                 FastCommand.Media(MediaAction.PLAY)
-            "next", "skip", "next song", "next track" ->
+            "next", "skip", "next song", "next track", "adutha paattu" ->
                 FastCommand.Media(MediaAction.NEXT)
-            "previous", "prev", "previous song" ->
+            "previous", "prev", "previous song", "munthaiya paattu" ->
                 FastCommand.Media(MediaAction.PREVIOUS)
             else -> null
         }
         is FastCommand.Volume -> when (t) {
-            "louder", "more", "a bit more", "increase", "higher", "turn it up", "up" ->
+            "louder", "more", "a bit more", "increase", "higher", "turn it up", "up", "aethu", "kootu", "satham aethu" ->
                 FastCommand.Volume(VolumeChange.UP)
-            "quieter", "less", "softer", "a bit less", "decrease", "lower", "turn it down", "down" ->
+            "quieter", "less", "softer", "a bit less", "decrease", "lower", "turn it down", "down", "korai", "kammi pannu" ->
                 FastCommand.Volume(VolumeChange.DOWN)
             else -> null
         }
         else -> null
     }
 
-    /**
-     * How long (ms) the user must stay quiet before the command can be run without waiting for the full end-of-speech
-     * timeout, or null when the command could still be continuing (searches, numbers, typed text).
-     */
     fun earlyAcceptDelayMs(raw: String): Long? = when (parse(raw)) {
         null -> null
         is FastCommand.OpenApp -> 800L
@@ -161,7 +159,7 @@ object FastCommandRouter {
     private fun mode(t: String): FastCommand? {
         val m = MODE.matchEntire(t) ?: return null
         val explicit = "mode" in t || t.startsWith("go ") || t.startsWith("switch") || t.startsWith("use ") ||
-            t.startsWith("set ") || "karo" in t || "kar do" in t
+            t.startsWith("set ") || "pannu" in t
         if (!explicit) return null
         return FastCommand.SetMode(if (m.groupValues[1].startsWith("auto")) AiMode.AUTO else AiMode.parse(m.groupValues[1]))
     }
@@ -175,7 +173,7 @@ object FastCommandRouter {
     private fun language(t: String, words: List<String>): FastCommand? {
         val m = LANG.matchEntire(t) ?: return null
         if (words.size == 1) return null
-        return FastCommand.SetLanguage(if (m.groupValues[1] == "english") "en" else "hi")
+        return FastCommand.SetLanguage(if (m.groupValues[1] == "english") "en" else "ta")
     }
 
     private fun press(t: String): FastCommand? = when {
@@ -197,7 +195,7 @@ object FastCommandRouter {
         if (words.size > 6 || ("scroll" !in words && "swipe" !in words)) return null
         if (words.any { it !in SCROLL_OK }) return null
         val dir = when {
-            "up" in words || "upar" in words || "oopar" in words -> "up"
+            "up" in words || "mele" in words || "mela" in words -> "up"
             "left" in words -> "left"
             "right" in words -> "right"
             else -> "down"
@@ -207,9 +205,9 @@ object FastCommandRouter {
 
     private fun volume(t: String, words: List<String>): FastCommand? {
         when (t) {
-            "mute", "mute karo", "mute kar do", "silent", "silent karo", "silent kar do", "mute phone", "mute the phone" ->
+            "mute", "mute pannu", "silent", "silent pannu", "mute phone", "mute the phone" ->
                 return FastCommand.Volume(VolumeChange.MUTE)
-            "unmute", "unmute karo", "unmute kar do" -> return FastCommand.Volume(VolumeChange.UNMUTE)
+            "unmute", "unmute pannu" -> return FastCommand.Volume(VolumeChange.UNMUTE)
             "louder" -> return FastCommand.Volume(VolumeChange.UP)
             "quieter" -> return FastCommand.Volume(VolumeChange.DOWN)
         }
@@ -224,8 +222,8 @@ object FastCommandRouter {
     }
 
     private fun flashlight(words: List<String>, t: String = ""): FastCommand? {
-        if (t == "turn it off" || t == "turn off") return FastCommand.Flashlight(false)
-        if (t == "turn it on" || t == "turn on") return FastCommand.Flashlight(true)
+        if (t == "turn it off" || t == "turn off" || t == "off pannu" || t == "ippo atha off pannu" || t == "atha off pannu") return FastCommand.Flashlight(false)
+        if (t == "turn it on" || t == "turn on" || t == "on pannu" || t == "ippo atha on pannu" || t == "atha on pannu") return FastCommand.Flashlight(true)
         if (words.size > 6 || words.none { it in TORCH_WORDS }) return null
         val on = words.any { it in ON_WORDS }
         val off = words.any { it in OFF_WORDS }
@@ -266,7 +264,10 @@ object FastCommandRouter {
     private fun fileOp(t: String): FastCommand? {
         if (FILE_LIST.matches(t)) return FastCommand.FileOp("list")
         FILE_FIND.matchEntire(t)?.let { return FastCommand.FileOp("find", filename = it.groupValues[1].trim()) }
-        FILE_READ.matchEntire(t)?.let { return FastCommand.FileOp("read", filename = it.groupValues[1].trim()) }
+        FILE_READ.matchEntire(t)?.let { m ->
+            val name = (m.groupValues.getOrNull(1) ?: m.groupValues.getOrNull(2)).orEmpty().trim()
+            return FastCommand.FileOp("read", filename = name)
+        }
         FILE_CREATE.matchEntire(t)?.let { return FastCommand.FileOp("create", filename = it.groupValues[1].trim(), content = it.groupValues[2].trim()) }
         return null
     }
@@ -278,7 +279,7 @@ object FastCommandRouter {
             val unit = m.groupValues[2]
             total += n * when {
                 unit.startsWith("sec") -> 1
-                unit.startsWith("min") -> 60
+                unit.startsWith("min") || unit.startsWith("nim") -> 60
                 else -> 3600
             }
         }
@@ -287,7 +288,7 @@ object FastCommandRouter {
 
     private fun timerOrAlarm(t: String, words: List<String>): FastCommand? {
         val isTimer = "timer" in words
-        val isAlarm = "alarm" in words || ("wake" in words && "me" in words) || words.any { it.startsWith("jaga") }
+        val isAlarm = "alarm" in words || ("wake" in words && "me" in words) || "eழுப்பு" in words
         if (!isTimer && !isAlarm) return null
         val seconds = durationSeconds(t)
         if (seconds > 0) return FastCommand.SetTimer(seconds)
@@ -297,12 +298,12 @@ object FastCommandRouter {
         val minute = m.groupValues[2].toIntOrNull() ?: 0
         if (minute !in 0..59 || hour !in 0..23) return null
         val explicit = m.groupValues[3]
-        val afternoon = words.any { it in setOf("shaam", "evening", "dopahar", "afternoon", "sham") }
-        val night = words.any { it in setOf("raat", "night") }
+        val afternoon = words.any { it in setOf("evening", "afternoon", "sayanthram", "madhiyam", "maalai") }
+        val night = words.any { it in setOf("night", "iravu") }
         val pm = explicit == "pm" || (explicit != "am" && (afternoon || night))
         if (hour <= 12) {
             if (pm && hour < 12) hour += 12
-            if (!pm && hour == 12 && (explicit == "am" || night || words.any { it in setOf("subah", "morning") })) hour = 0
+            if (!pm && hour == 12 && (explicit == "am" || night || words.any { it in setOf("kaalai", "morning") })) hour = 0
             if (night && !pm && hour == 12) hour = 0
         }
         return FastCommand.SetAlarm(hour, minute)
@@ -348,7 +349,7 @@ object FastCommandRouter {
         val tw = target.split(' ')
         if (target.isEmpty() || tw.size > 4 || target in OPEN_BLOCKED) return null
         if (tw.any { it.all(Char::isDigit) }) return null
-        if (" and " in " $target " || " aur " in " $target ") return null
+        if (" and " in " $target " || " marrum " in " $target ") return null
         return FastCommand.OpenApp(target)
     }
 
